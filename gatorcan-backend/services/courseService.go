@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	dtos "gatorcan-backend/DTOs"
 	"gatorcan-backend/config"
+	"gatorcan-backend/errors"
 	"gatorcan-backend/interfaces"
 	"gatorcan-backend/models"
 	"log"
@@ -45,13 +45,13 @@ func (s *CourseServiceImpl) GetEnrolledCourses(ctx context.Context, logger *log.
 	user, err := s.userRepo.GetUserByUsername(ctx, username)
 	if err != nil {
 		logger.Printf("user not found: %s %d", username, 404)
-		return nil, errors.New("user not found")
+		return nil, errors.ErrUserNotFound
 	}
 
 	enrollments, err := s.courseRepo.GetEnrolledCourses(ctx, int(user.ID))
 	if err != nil {
 		logger.Printf("failed to fetch enrolled courses: %s %d", username, 500)
-		return nil, errors.New("failed to fetch enrolled courses")
+		return nil, errors.ErrFailedToFetch
 	}
 
 	var enrolledCourses []dtos.EnrolledCoursesResponseDTO
@@ -76,14 +76,14 @@ func (s *CourseServiceImpl) GetCourses(ctx context.Context, logger *log.Logger, 
 	_, err := s.userRepo.GetUserByUsername(ctx, username)
 	if err != nil {
 		logger.Printf("user not found: %s %d", username, 404)
-		return nil, errors.New("user not found")
+		return nil, errors.ErrUserNotFound
 	}
 
 	// Fetch courses using pagination
 	courses, err := s.courseRepo.GetCourses(ctx, page, pageSize)
 	if err != nil {
 		logger.Printf("Failed to fetch courses for page %d with pageSize %d: %v", page, pageSize, err)
-		return nil, errors.New("failed to fetch courses")
+		return nil, errors.ErrFailedToFetch
 	}
 
 	// Convert courses using DTO function
@@ -95,43 +95,43 @@ func (s *CourseServiceImpl) EnrollUser(ctx context.Context, logger *log.Logger, 
 	user, err := s.userRepo.GetUserByUsername(ctx, username)
 	if err != nil {
 		logger.Printf("user not found: %s %d", username, 404)
-		return errors.New("user not found")
+		return errors.ErrUserNotFound
 	}
 	course, err := s.courseRepo.GetCourseByID(ctx, courseID)
 	if err != nil {
 		logger.Printf("course not found: %d %d", courseID, 404)
-		return errors.New("course not found")
+		return errors.ErrCourseNotFound
 	}
 
 	// Check if user is already enrolled
 	enrollments, err := s.courseRepo.GetEnrolledCourses(ctx, int(user.ID))
 	if err != nil {
 		logger.Printf("failed to fetch enrolled courses: %s %d", username, 500)
-		return errors.New("failed to fetch enrolled courses")
+		return errors.ErrFailedToFetch
 	}
 	for _, enrollment := range enrollments {
 		if enrollment.ActiveCourse.CourseID == uint(courseID) {
 			logger.Printf("user already enrolled: %s %d", username, 400)
-			return errors.New("user already enrolled")
+			return errors.ErrAlreadyEnrolled
 		}
 	}
 
 	// Check if the course is active
 	if course.StartDate.After(time.Now()) {
 		logger.Printf("course is not active: %d %d", courseID, 400)
-		return errors.New("course is not active")
+		return errors.ErrCourseInactive
 	}
 
 	// Check if the course is full
 	if course.Capacity == course.Enrolled {
 		logger.Printf("course is full: %d %d", courseID, 400)
-		return errors.New("course is full")
+		return errors.ErrCourseFull
 	}
 
 	err = s.courseRepo.RequestEnrollment(ctx, user.ID, course.ID)
 	if err != nil {
 		logger.Printf("failed to request enrollment: %s %d", username, 500)
-		return errors.New("failed to request enrollment")
+		return errors.ErrFailedToEnroll
 	}
 
 	err = sendDiscordWebhook(user.ID, course.ID)
