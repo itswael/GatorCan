@@ -41,6 +41,10 @@ func UserRoutes(userController *controllers.UserController, courseController *co
 			userController.UpdateUser(c, logger)
 		})
 
+		userGroup.POST("/assignments/upload", func(c *gin.Context) {
+			controllers.UploadAssignments(c, logger)
+		})
+
 	}
 
 	// Instructor-only Routes
@@ -65,4 +69,5 @@ func UserRoutes(userController *controllers.UserController, courseController *co
 			courseController.EnrollInCourse(c)
 		})
 	}
+
 }

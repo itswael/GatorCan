@@ -93,4 +93,6 @@ func main() {
 	handler := c.Handler(router)
 
 	http.ListenAndServe(":8080", handler)
+
+	//router.Run(":8080")
 }

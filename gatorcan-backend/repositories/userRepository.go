@@ -9,13 +9,14 @@ import (
 )
 
 type UserRepository interface {
-	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
-	GetUserByID(ctx context.Context, id uint) (*models.User, error)
-	GetUserByUsernameorEmail(ctx context.Context, username string, email string) (*models.User, error)
-	CreateNewUser(ctx context.Context, userDTO *dtos.UserCreateDTO) (*models.User, error)
-	DeleteUser(ctx context.Context, user *models.User) error
-	UpdateUser(ctx context.Context, user *models.User) error
-	UpdateUserRoles(ctx context.Context, user *models.User, roles []*models.Role) error
+	GetUserByUsername(username string) (*models.User, error)
+	GetUserByID(id uint) (*models.User, error)
+	GetUserByUsernameorEmail(username string, email string) (*models.User, error)
+	CreateNewUser(userDTO *dtos.UserCreateDTO) (*models.User, error)
+	DeleteUser(user *models.User) error
+	UpdateUser(user *models.User) error
+	UpdateUserRoles(user *models.User, roles []*models.Role) error
+	CreateAssignment(path string, user_id uint) error
 }
 
 type userRepository struct {
@@ -89,5 +90,17 @@ func (r *userRepository) UpdateUserRoles(ctx context.Context, user *models.User,
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (r *userRepository) CreateAssignment(path string, user_id uint) error {
+
+	if err := database.DB.Create(&models.UserAssignment{
+		Path:   path,
+		UserId: user_id,
+	}).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
