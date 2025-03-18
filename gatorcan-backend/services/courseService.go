@@ -124,7 +124,7 @@ func (s *CourseServiceImpl) EnrollUser(ctx context.Context, logger *log.Logger, 
 
 	// Check if the course is full
 	if course.Capacity == course.Enrolled {
-		logger.Printf("course is full: %d %d", courseID, 400)
+		logger.Printf("course has reached maximum capacity: %d %d", courseID, 400)
 		return errors.ErrCourseFull
 	}
 
