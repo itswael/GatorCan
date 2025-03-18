@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	dtos "gatorcan-backend/DTOs"
 	"gatorcan-backend/controllers"
+	"gatorcan-backend/errors"
 	"io"
 	"log"
 	"net/http"
@@ -44,15 +44,6 @@ func (m *MockCourseService) EnrollUser(ctx context.Context, logger *log.Logger, 
 	return args.Error(0)
 }
 
-// Create domain error constants to match those used in the controller
-var (
-	ErrUserNotFound    = errors.New("user not found")
-	ErrCourseNotFound  = errors.New("course not found")
-	ErrAlreadyEnrolled = errors.New("enrollment request already exists")
-	ErrCourseFull      = errors.New("course has reached maximum capacity")
-	ErrFailedToEnroll  = errors.New("failed to request enrollment")
-)
-
 func TestGetEnrolledCourses(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
@@ -82,7 +73,7 @@ func TestGetEnrolledCourses(t *testing.T) {
 					Return(courses, nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody:   `[{"id":1,"name":"Test Course","description":"Test Description","instructor_name":"instructor","instructor_email":"instructor@example.com"}]`,
+			expectedBody:   `[{"Description":"Test Description", "EndDate":"0001-01-01T00:00:00Z", "ID":1, "InstructorEmail":"instructor@example.com", "InstructorName":"instructor", "Name":"Test Course", "StartDate":"0001-01-01T00:00:00Z"}]`,
 		},
 		{
 			name:     "Success with empty courses",
@@ -99,7 +90,7 @@ func TestGetEnrolledCourses(t *testing.T) {
 			username: "nonexistent",
 			setupMock: func(m *MockCourseService) {
 				m.On("GetEnrolledCourses", mock.Anything, mock.Anything, "nonexistent").
-					Return(nil, ErrUserNotFound)
+					Return(nil, errors.ErrUserNotFound)
 			},
 			expectedStatus: http.StatusNotFound,
 			expectedBody:   `{"error":"User not found"}`,
@@ -109,7 +100,7 @@ func TestGetEnrolledCourses(t *testing.T) {
 			username: "testuser",
 			setupMock: func(m *MockCourseService) {
 				m.On("GetEnrolledCourses", mock.Anything, mock.Anything, "testuser").
-					Return(nil, errors.New("database connection failed"))
+					Return(nil, errors.ErrDatabaseError)
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedBody:   `{"error":"Failed to fetch enrolled courses"}`,
@@ -180,7 +171,7 @@ func TestGetCourses(t *testing.T) {
 					Return(courses, nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody:   `[{"id":1,"name":"Test Course","description":"Test Description"}]`,
+			expectedBody:   `[{"created_at": "0001-01-01T00:00:00Z","id":1,"name":"Test Course","description":"Test Description","updated_at": "0001-01-01T00:00:00Z"}]`,
 		},
 		{
 			name:     "Success with custom pagination",
@@ -217,7 +208,7 @@ func TestGetCourses(t *testing.T) {
 			queryParams: map[string]string{},
 			setupMock: func(m *MockCourseService) {
 				m.On("GetCourses", mock.Anything, mock.Anything, "testuser", 1, 10).
-					Return(nil, errors.New("database error"))
+					Return(nil, errors.ErrDatabaseError)
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedBody:   `{"error":"Failed to fetch courses"}`,
@@ -317,7 +308,7 @@ func TestEnrollInCourse(t *testing.T) {
 				// No mock needed - validation should catch it before service call
 			},
 			expectedStatus: http.StatusBadRequest,
-			expectedBody:   `{"error":"Invalid request body"}`,
+			expectedBody:   `{"error":"Invalid course ID"}`,
 		},
 		{
 			name:     "User not found",
@@ -327,7 +318,7 @@ func TestEnrollInCourse(t *testing.T) {
 			},
 			setupMock: func(m *MockCourseService) {
 				m.On("EnrollUser", mock.Anything, mock.Anything, "nonexistent", 1).
-					Return(ErrUserNotFound)
+					Return(errors.ErrUserNotFound)
 			},
 			expectedStatus: http.StatusNotFound,
 			expectedBody:   `{"error":"User not found"}`,
@@ -340,10 +331,10 @@ func TestEnrollInCourse(t *testing.T) {
 			},
 			setupMock: func(m *MockCourseService) {
 				m.On("EnrollUser", mock.Anything, mock.Anything, "testuser", 999).
-					Return(ErrCourseNotFound)
+					Return(errors.ErrCourseNotFound)
 			},
-			expectedStatus: http.StatusBadRequest,
-			expectedBody:   `{"error":"Invalid course ID"}`,
+			expectedStatus: http.StatusNotFound,
+			expectedBody:   `{"error":"Course not found"}`,
 		},
 		{
 			name:     "Already enrolled",
@@ -353,10 +344,10 @@ func TestEnrollInCourse(t *testing.T) {
 			},
 			setupMock: func(m *MockCourseService) {
 				m.On("EnrollUser", mock.Anything, mock.Anything, "testuser", 1).
-					Return(ErrAlreadyEnrolled)
+					Return(errors.ErrAlreadyEnrolled)
 			},
 			expectedStatus: http.StatusBadRequest,
-			expectedBody:   `{"error":"Invalid course ID"}`,
+			expectedBody:   `{"error":"Enrollment request already exists"}`,
 		},
 		{
 			name:     "Course full",
@@ -366,10 +357,10 @@ func TestEnrollInCourse(t *testing.T) {
 			},
 			setupMock: func(m *MockCourseService) {
 				m.On("EnrollUser", mock.Anything, mock.Anything, "testuser", 2).
-					Return(ErrCourseFull)
+					Return(errors.ErrCourseFull)
 			},
 			expectedStatus: http.StatusBadRequest,
-			expectedBody:   `{"error":"Invalid course ID"}`,
+			expectedBody:   `{"error":"Course has reached maximum capacity"}`,
 		},
 	}
 
