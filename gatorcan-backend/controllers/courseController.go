@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	dtos "gatorcan-backend/DTOs"
+	"gatorcan-backend/errors"
 	"gatorcan-backend/interfaces"
 	"log"
 	"net/http"
@@ -48,7 +48,7 @@ func (cc *CourseController) GetEnrolledCourses(c *gin.Context) {
 	}
 
 	enrollments, err := cc.courseService.GetEnrolledCourses(ctx, cc.logger, username.(string))
-	if err == errors.New("user not found") {
+	if err == errors.ErrUserNotFound {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	} else if err != nil {
@@ -126,13 +126,13 @@ func (cc *CourseController) EnrollInCourse(c *gin.Context) {
 	}
 
 	err := cc.courseService.EnrollUser(ctx, cc.logger, username.(string), courseID)
-	if err == errors.New("user not found") {
+	if err == errors.ErrUserNotFound {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
-	} else if err == errors.New("course not found") {
+	} else if err == errors.ErrCourseNotFound {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
 		return
-	} else if err == errors.New("enrollment request already exists") {
+	} else if err == errors.ErrAlreadyEnrolled {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Enrollment request already exists"})
 		return
 	} else if err != nil {
