@@ -135,6 +135,9 @@ func (cc *CourseController) EnrollInCourse(c *gin.Context) {
 	} else if err == errors.ErrAlreadyEnrolled {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Enrollment request already exists"})
 		return
+	} else if err == errors.ErrCourseFull {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Course has reached maximum capacity"})
+		return
 	} else if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to request enrollment"})
 		return

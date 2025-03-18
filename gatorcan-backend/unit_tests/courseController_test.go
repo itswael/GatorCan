@@ -2,11 +2,11 @@ package unit_tests
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
-	"errors"
 	dtos "gatorcan-backend/DTOs"
 	"gatorcan-backend/controllers"
+	"gatorcan-backend/errors"
+	"gatorcan-backend/unit_tests/mocks"
 	"io"
 	"log"
 	"net/http"
@@ -18,41 +18,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockCourseService mocks the CourseService interface
-type MockCourseService struct {
-	mock.Mock
-}
-
-func (m *MockCourseService) GetEnrolledCourses(ctx context.Context, logger *log.Logger, username string) ([]dtos.EnrolledCoursesResponseDTO, error) {
-	args := m.Called(ctx, logger, username)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]dtos.EnrolledCoursesResponseDTO), args.Error(1)
-}
-
-func (m *MockCourseService) GetCourses(ctx context.Context, logger *log.Logger, username string, page, pageSize int) ([]dtos.CourseResponseDTO, error) {
-	args := m.Called(ctx, logger, username, page, pageSize)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).([]dtos.CourseResponseDTO), args.Error(1)
-}
-
-func (m *MockCourseService) EnrollUser(ctx context.Context, logger *log.Logger, username string, courseID int) error {
-	args := m.Called(ctx, logger, username, courseID)
-	return args.Error(0)
-}
-
-// Create domain error constants to match those used in the controller
-var (
-	ErrUserNotFound    = errors.New("user not found")
-	ErrCourseNotFound  = errors.New("course not found")
-	ErrAlreadyEnrolled = errors.New("enrollment request already exists")
-	ErrCourseFull      = errors.New("course has reached maximum capacity")
-	ErrFailedToEnroll  = errors.New("failed to request enrollment")
-)
-
 func TestGetEnrolledCourses(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
@@ -61,14 +26,14 @@ func TestGetEnrolledCourses(t *testing.T) {
 	tests := []struct {
 		name           string
 		username       string
-		setupMock      func(*MockCourseService)
+		setupMock      func(*mocks.MockCourseService)
 		expectedStatus int
 		expectedBody   string
 	}{
 		{
 			name:     "Success with courses",
 			username: "testuser",
-			setupMock: func(m *MockCourseService) {
+			setupMock: func(m *mocks.MockCourseService) {
 				courses := []dtos.EnrolledCoursesResponseDTO{
 					{
 						ID:              1,
@@ -82,12 +47,12 @@ func TestGetEnrolledCourses(t *testing.T) {
 					Return(courses, nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody:   `[{"id":1,"name":"Test Course","description":"Test Description","instructor_name":"instructor","instructor_email":"instructor@example.com"}]`,
+			expectedBody:   `[{"Description":"Test Description", "EndDate":"0001-01-01T00:00:00Z", "ID":1, "InstructorEmail":"instructor@example.com", "InstructorName":"instructor", "Name":"Test Course", "StartDate":"0001-01-01T00:00:00Z"}]`,
 		},
 		{
 			name:     "Success with empty courses",
 			username: "newuser",
-			setupMock: func(m *MockCourseService) {
+			setupMock: func(m *mocks.MockCourseService) {
 				m.On("GetEnrolledCourses", mock.Anything, mock.Anything, "newuser").
 					Return([]dtos.EnrolledCoursesResponseDTO{}, nil)
 			},
@@ -97,9 +62,9 @@ func TestGetEnrolledCourses(t *testing.T) {
 		{
 			name:     "User not found",
 			username: "nonexistent",
-			setupMock: func(m *MockCourseService) {
+			setupMock: func(m *mocks.MockCourseService) {
 				m.On("GetEnrolledCourses", mock.Anything, mock.Anything, "nonexistent").
-					Return(nil, ErrUserNotFound)
+					Return(nil, errors.ErrUserNotFound)
 			},
 			expectedStatus: http.StatusNotFound,
 			expectedBody:   `{"error":"User not found"}`,
@@ -107,9 +72,9 @@ func TestGetEnrolledCourses(t *testing.T) {
 		{
 			name:     "Database error",
 			username: "testuser",
-			setupMock: func(m *MockCourseService) {
+			setupMock: func(m *mocks.MockCourseService) {
 				m.On("GetEnrolledCourses", mock.Anything, mock.Anything, "testuser").
-					Return(nil, errors.New("database connection failed"))
+					Return(nil, errors.ErrDatabaseError)
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedBody:   `{"error":"Failed to fetch enrolled courses"}`,
@@ -119,7 +84,7 @@ func TestGetEnrolledCourses(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup mock service
-			mockService := new(MockCourseService)
+			mockService := new(mocks.MockCourseService)
 			tc.setupMock(mockService)
 
 			// Create controller
@@ -160,7 +125,7 @@ func TestGetCourses(t *testing.T) {
 		name           string
 		username       string
 		queryParams    map[string]string
-		setupMock      func(*MockCourseService)
+		setupMock      func(*mocks.MockCourseService)
 		expectedStatus int
 		expectedBody   string
 	}{
@@ -168,7 +133,7 @@ func TestGetCourses(t *testing.T) {
 			name:        "Success with default pagination",
 			username:    "testuser",
 			queryParams: map[string]string{},
-			setupMock: func(m *MockCourseService) {
+			setupMock: func(m *mocks.MockCourseService) {
 				courses := []dtos.CourseResponseDTO{
 					{
 						ID:          1,
@@ -180,7 +145,7 @@ func TestGetCourses(t *testing.T) {
 					Return(courses, nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody:   `[{"id":1,"name":"Test Course","description":"Test Description"}]`,
+			expectedBody:   `[{"created_at": "0001-01-01T00:00:00Z","id":1,"name":"Test Course","description":"Test Description","updated_at": "0001-01-01T00:00:00Z"}]`,
 		},
 		{
 			name:     "Success with custom pagination",
@@ -189,7 +154,7 @@ func TestGetCourses(t *testing.T) {
 				"page":     "2",
 				"pageSize": "5",
 			},
-			setupMock: func(m *MockCourseService) {
+			setupMock: func(m *mocks.MockCourseService) {
 				m.On("GetCourses", mock.Anything, mock.Anything, "testuser", 2, 5).
 					Return([]dtos.CourseResponseDTO{}, nil)
 			},
@@ -203,7 +168,7 @@ func TestGetCourses(t *testing.T) {
 				"page":     "invalid",
 				"pageSize": "10",
 			},
-			setupMock: func(m *MockCourseService) {
+			setupMock: func(m *mocks.MockCourseService) {
 				// Should use default page = 1
 				m.On("GetCourses", mock.Anything, mock.Anything, "testuser", 1, 10).
 					Return([]dtos.CourseResponseDTO{}, nil)
@@ -215,9 +180,9 @@ func TestGetCourses(t *testing.T) {
 			name:        "Service error",
 			username:    "testuser",
 			queryParams: map[string]string{},
-			setupMock: func(m *MockCourseService) {
+			setupMock: func(m *mocks.MockCourseService) {
 				m.On("GetCourses", mock.Anything, mock.Anything, "testuser", 1, 10).
-					Return(nil, errors.New("database error"))
+					Return(nil, errors.ErrDatabaseError)
 			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedBody:   `{"error":"Failed to fetch courses"}`,
@@ -227,7 +192,7 @@ func TestGetCourses(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup mock service
-			mockService := new(MockCourseService)
+			mockService := new(mocks.MockCourseService)
 			tc.setupMock(mockService)
 
 			// Create controller
@@ -278,7 +243,7 @@ func TestEnrollInCourse(t *testing.T) {
 		name           string
 		username       string
 		requestBody    map[string]interface{}
-		setupMock      func(*MockCourseService)
+		setupMock      func(*mocks.MockCourseService)
 		expectedStatus int
 		expectedBody   string
 	}{
@@ -288,7 +253,7 @@ func TestEnrollInCourse(t *testing.T) {
 			requestBody: map[string]interface{}{
 				"CourseID": 1,
 			},
-			setupMock: func(m *MockCourseService) {
+			setupMock: func(m *mocks.MockCourseService) {
 				m.On("EnrollUser", mock.Anything, mock.Anything, "testuser", 1).
 					Return(nil)
 			},
@@ -301,7 +266,7 @@ func TestEnrollInCourse(t *testing.T) {
 			requestBody: map[string]interface{}{
 				"CourseID": 0, // Invalid ID
 			},
-			setupMock: func(m *MockCourseService) {
+			setupMock: func(m *mocks.MockCourseService) {
 				// No mock needed - validation should catch it before service call
 			},
 			expectedStatus: http.StatusBadRequest,
@@ -313,11 +278,11 @@ func TestEnrollInCourse(t *testing.T) {
 			requestBody: map[string]interface{}{
 				// Missing course_id field
 			},
-			setupMock: func(m *MockCourseService) {
+			setupMock: func(m *mocks.MockCourseService) {
 				// No mock needed - validation should catch it before service call
 			},
 			expectedStatus: http.StatusBadRequest,
-			expectedBody:   `{"error":"Invalid request body"}`,
+			expectedBody:   `{"error":"Invalid course ID"}`,
 		},
 		{
 			name:     "User not found",
@@ -325,9 +290,9 @@ func TestEnrollInCourse(t *testing.T) {
 			requestBody: map[string]interface{}{
 				"CourseID": 1,
 			},
-			setupMock: func(m *MockCourseService) {
+			setupMock: func(m *mocks.MockCourseService) {
 				m.On("EnrollUser", mock.Anything, mock.Anything, "nonexistent", 1).
-					Return(ErrUserNotFound)
+					Return(errors.ErrUserNotFound)
 			},
 			expectedStatus: http.StatusNotFound,
 			expectedBody:   `{"error":"User not found"}`,
@@ -338,12 +303,12 @@ func TestEnrollInCourse(t *testing.T) {
 			requestBody: map[string]interface{}{
 				"CourseID": 999,
 			},
-			setupMock: func(m *MockCourseService) {
+			setupMock: func(m *mocks.MockCourseService) {
 				m.On("EnrollUser", mock.Anything, mock.Anything, "testuser", 999).
-					Return(ErrCourseNotFound)
+					Return(errors.ErrCourseNotFound)
 			},
-			expectedStatus: http.StatusBadRequest,
-			expectedBody:   `{"error":"Invalid course ID"}`,
+			expectedStatus: http.StatusNotFound,
+			expectedBody:   `{"error":"Course not found"}`,
 		},
 		{
 			name:     "Already enrolled",
@@ -351,12 +316,12 @@ func TestEnrollInCourse(t *testing.T) {
 			requestBody: map[string]interface{}{
 				"CourseID": 1,
 			},
-			setupMock: func(m *MockCourseService) {
+			setupMock: func(m *mocks.MockCourseService) {
 				m.On("EnrollUser", mock.Anything, mock.Anything, "testuser", 1).
-					Return(ErrAlreadyEnrolled)
+					Return(errors.ErrAlreadyEnrolled)
 			},
 			expectedStatus: http.StatusBadRequest,
-			expectedBody:   `{"error":"Invalid course ID"}`,
+			expectedBody:   `{"error":"Enrollment request already exists"}`,
 		},
 		{
 			name:     "Course full",
@@ -364,19 +329,19 @@ func TestEnrollInCourse(t *testing.T) {
 			requestBody: map[string]interface{}{
 				"CourseID": 2,
 			},
-			setupMock: func(m *MockCourseService) {
+			setupMock: func(m *mocks.MockCourseService) {
 				m.On("EnrollUser", mock.Anything, mock.Anything, "testuser", 2).
-					Return(ErrCourseFull)
+					Return(errors.ErrCourseFull)
 			},
 			expectedStatus: http.StatusBadRequest,
-			expectedBody:   `{"error":"Invalid course ID"}`,
+			expectedBody:   `{"error":"Course has reached maximum capacity"}`,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup mock service
-			mockService := new(MockCourseService)
+			mockService := new(mocks.MockCourseService)
 			tc.setupMock(mockService)
 
 			// Create controller

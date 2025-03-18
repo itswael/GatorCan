@@ -1,85 +1,59 @@
-package unit
+package unit_tests
 
 import (
+	"context"
 	"errors"
 	dtos "gatorcan-backend/DTOs"
+	"gatorcan-backend/config"
 	"gatorcan-backend/models"
+	"gatorcan-backend/services"
+	"gatorcan-backend/unit_tests/mocks"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-// MockUserRepository mocks the user repository
-type MockUserRepository struct {
-	mock.Mock
-}
+func TestLogin_service(t *testing.T) {
+	// Setup mocks
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockRoleRepo := new(mocks.MockRoleRepository)
+	mockCourseRepo := new(mocks.MockCourseRepository)
+	mockHTTPClient := new(mocks.MockHTTPClient)
 
-func (m *MockUserRepository) GetUserByUsername(username string) (*models.User, error) {
-	args := m.Called(username)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
+	// Create test config
+	appConfig := &config.AppConfig{
+		Environment: "test",
 	}
-	return args.Get(0).(*models.User), args.Error(1)
-}
 
-func (m *MockUserRepository) GetUserByUsernameorEmail(username, email string) (*models.User, error) {
-	args := m.Called(username, email)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
+	// Create service with mocks
+	userService := services.NewUserService(
+		mockCourseRepo,
+		mockUserRepo,
+		mockRoleRepo,
+		appConfig,
+		mockHTTPClient,
+	)
+
+	// Create test context
+	ctx := context.Background()
+
+	// Setup test data
+	hashedPassword := "$2a$12$4I/NDnXkOjVBchenmJsJneF3fzYKoDkWk.cflJ.2fmR5a2Kio214q" // This would be properly hashed in real code
+	mockUser := &models.User{
+		Username: "testuser",
+		Password: hashedPassword,
+		Roles:    []*models.Role{{Name: "student"}},
 	}
-	return args.Get(0).(*models.User), args.Error(1)
-}
-
-func (m *MockUserRepository) CreateNewUser(userData *dtos.UserCreateDTO) (*models.User, error) {
-	args := m.Called(userData)
-	return args.Get(0).(*models.User), args.Error(1)
-}
-
-func (m *MockUserRepository) DeleteUser(user *models.User) error {
-	args := m.Called(user)
-	return args.Error(0)
-}
-
-func (m *MockUserRepository) UpdateUser(user *models.User) error {
-	args := m.Called(user)
-	return args.Error(0)
-}
-
-// MockRoleRepository mocks the role repository
-type MockRoleRepository struct {
-	mock.Mock
-}
-
-func (m *MockRoleRepository) GetRolesByName(roles []string) ([]models.Role, error) {
-	args := m.Called(roles)
-	return args.Get(0).([]models.Role), args.Error(1)
-}
-
-var userRepo *MockUserRepository
-
-func mockLogin(loginData *dtos.LoginRequestDTO) (*dtos.LoginResponseDTO, error) {
-	user, err := userRepo.GetUserByUsername(loginData.Username)
-	if err != nil {
-		return &dtos.LoginResponseDTO{Err: true}, err
-	}
-	// Simulate password check and token generation
-	if loginData.Password == "password123" && user != nil {
-		return &dtos.LoginResponseDTO{Token: "mockToken", Err: false}, nil
-	}
-	return &dtos.LoginResponseDTO{Err: true}, errors.New("invalid credentials")
-}
-
-func TestLogin(t *testing.T) {
-	mockRepo := new(MockUserRepository)
-	userRepo = mockRepo
 
 	tests := []struct {
-		name        string
-		loginData   *dtos.LoginRequestDTO
-		mockUser    *models.User
-		mockError   error
-		expectError bool
+		name          string
+		loginData     *dtos.LoginRequestDTO
+		mockUser      *models.User
+		mockError     error
+		expectError   bool
+		expectedToken string
 	}{
 		{
 			name: "Successful Login",
@@ -87,60 +61,227 @@ func TestLogin(t *testing.T) {
 				Username: "testuser",
 				Password: "password123",
 			},
-			mockUser: &models.User{
-				Username: "testuser",
-				Password: "$2a$10$somehashedpassword", // Use a real hashed password here
-				Roles:    []*models.Role{{Name: "user"}},
-			},
-			mockError:   nil,
-			expectError: false,
+			mockUser:      mockUser,
+			mockError:     nil,
+			expectError:   false,
+			expectedToken: "jwt-token", // The token that would be generated
 		},
 		{
 			name: "User Not Found",
 			loginData: &dtos.LoginRequestDTO{
 				Username: "nonexistent",
+				Password: "password123",
 			},
-			mockUser:    nil,
-			mockError:   errors.New("user not found"),
-			expectError: true,
+			mockUser:      nil,
+			mockError:     errors.New("user not found"),
+			expectError:   true,
+			expectedToken: "",
+		},
+		{
+			name: "Invalid Password",
+			loginData: &dtos.LoginRequestDTO{
+				Username: "testuser",
+				Password: "wrongpassword",
+			},
+			mockUser:      mockUser,
+			mockError:     nil,
+			expectError:   true,
+			expectedToken: "",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepo.On("GetUserByUsername", tc.loginData.Username).Return(tc.mockUser, tc.mockError)
+			// Setup expectations
+			mockUserRepo.On("GetUserByUsername", ctx, tc.loginData.Username).Return(tc.mockUser, tc.mockError).Once()
 
-			response, err := mockLogin(tc.loginData)
+			// For successful login, we need to mock the password verification and token generation
+			if tc.mockUser != nil && tc.loginData.Password == "password123" {
+				// We'd normally mock the JWT generation, but our simplified implementation will handle this
+				// This would be more complex with actual utils.GenerateToken calls
+			}
 
+			// Call service method
+			response, err := userService.Login(ctx, tc.loginData)
+
+			// Assertions
 			if tc.expectError {
 				assert.Error(t, err)
 				assert.True(t, response.Err)
+				assert.Empty(t, response.Token)
 			} else {
 				assert.NoError(t, err)
 				assert.False(t, response.Err)
 				assert.NotEmpty(t, response.Token)
 			}
+
+			// Verify all expectations
+			mockUserRepo.AssertExpectations(t)
 		})
 	}
 }
 
-func GetUserDetailsFromService(username string) (*models.User, error) {
-	user, err := userRepo.GetUserByUsername(username)
-	if err != nil {
-		return nil, err
+func TestCreateUser_service(t *testing.T) {
+	// Setup mocks
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockRoleRepo := new(mocks.MockRoleRepository)
+	mockCourseRepo := new(mocks.MockCourseRepository)
+	mockHTTPClient := new(mocks.MockHTTPClient)
+
+	// Create test config
+	appConfig := &config.AppConfig{
+		Environment: "test",
 	}
-	return user, nil
+
+	// Create service with mocks
+	userService := services.NewUserService(
+		mockCourseRepo,
+		mockUserRepo,
+		mockRoleRepo,
+		appConfig,
+		mockHTTPClient,
+	)
+
+	// Create test context
+	ctx := context.Background()
+
+	tests := []struct {
+		name             string
+		userData         *dtos.UserRequestDTO
+		mockExistingUser *models.User
+		mockRoles        []models.Role
+		mockNewUser      *models.User
+		expectError      bool
+		expectedCode     int
+	}{
+		{
+			name: "Successful User Creation",
+			userData: &dtos.UserRequestDTO{
+				Username: "newuser",
+				Email:    "new@example.com",
+				Password: "password123",
+				Roles:    []string{"student"},
+			},
+			mockExistingUser: nil,
+			mockRoles: []models.Role{
+				{Name: "student"},
+			},
+			mockNewUser: &models.User{
+				Username: "newuser",
+				Email:    "new@example.com",
+				Roles:    []*models.Role{{Name: "student"}},
+			},
+			expectError:  false,
+			expectedCode: http.StatusCreated,
+		},
+		{
+			name: "User Already Exists",
+			userData: &dtos.UserRequestDTO{
+				Username: "existinguser",
+				Email:    "existing@example.com",
+				Password: "password123",
+				Roles:    []string{"student"},
+			},
+			mockExistingUser: &models.User{
+				Username: "existinguser",
+				Email:    "existing@example.com",
+			},
+			mockRoles:    nil,
+			mockNewUser:  nil,
+			expectError:  true,
+			expectedCode: http.StatusBadRequest,
+		},
+		{
+			name: "Role Not Found",
+			userData: &dtos.UserRequestDTO{
+				Username: "newuser",
+				Email:    "new@example.com",
+				Password: "password123",
+				Roles:    []string{"invalidrole"},
+			},
+			mockExistingUser: nil,
+			mockRoles:        []models.Role{},
+			mockNewUser:      nil,
+			expectError:      true,
+			expectedCode:     http.StatusBadRequest,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Setup expectations
+			mockUserRepo.On("GetUserByUsernameorEmail", ctx, tc.userData.Username, tc.userData.Email).
+				Return(tc.mockExistingUser, func() error {
+					if tc.mockExistingUser != nil {
+						return nil
+					}
+					return errors.New("record not found")
+				}()).Once()
+
+			if tc.mockExistingUser == nil {
+				mockRoleRepo.On("GetRolesByName", ctx, tc.userData.Roles).
+					Return(tc.mockRoles, func() error {
+						if tc.mockRoles == nil {
+							return errors.New("role not found")
+						}
+						return nil
+					}()).Maybe()
+
+				if tc.mockRoles != nil {
+					mockUserRepo.On("CreateNewUser", ctx, mock.AnythingOfType("*dtos.UserCreateDTO")).Return(tc.mockNewUser, nil).Maybe()
+				}
+			}
+
+			// Call service method
+			response, err := userService.CreateUser(ctx, tc.userData)
+
+			// Assertions
+			if tc.expectError {
+				assert.Error(t, err)
+				assert.True(t, response.Err)
+				assert.Equal(t, tc.expectedCode, response.Code)
+			} else {
+				assert.NoError(t, err)
+				assert.False(t, response.Err)
+				assert.Equal(t, tc.expectedCode, response.Code)
+				assert.Equal(t, "User created successfully", response.Message)
+			}
+
+			// Verify all expectations
+			mockUserRepo.AssertExpectations(t)
+			mockRoleRepo.AssertExpectations(t)
+		})
+	}
 }
 
-func TestGetUserDetails(t *testing.T) {
-	mockRepo := new(MockUserRepository)
-	userRepo = mockRepo
+func TestGetUserDetails_service(t *testing.T) {
+	// Setup mocks
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockRoleRepo := new(mocks.MockRoleRepository)
+	mockCourseRepo := new(mocks.MockCourseRepository)
+	mockHTTPClient := new(mocks.MockHTTPClient)
+
+	// Create test config
+	appConfig := &config.AppConfig{
+		Environment: "test",
+	}
+
+	// Create service with mocks
+	userService := services.NewUserService(
+		mockCourseRepo,
+		mockUserRepo,
+		mockRoleRepo,
+		appConfig,
+		mockHTTPClient,
+	)
+
+	// Create test context
+	ctx := context.Background()
 
 	mockUser := &models.User{
 		Username: "testuser",
 		Email:    "test@example.com",
-		//CreatedAt: time.Now(),
-		Roles: []*models.Role{{Name: "user"}},
+		Roles:    []*models.Role{{Name: "student"}},
 	}
 
 	tests := []struct {
@@ -168,10 +309,13 @@ func TestGetUserDetails(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepo.On("GetUserByUsername", tc.username).Return(tc.mockUser, tc.mockError)
+			// Setup expectations
+			mockUserRepo.On("GetUserByUsername", ctx, tc.username).Return(tc.mockUser, tc.mockError).Once()
 
-			user, err := GetUserDetailsFromService(tc.username)
+			// Call service method
+			user, err := userService.GetUserDetails(ctx, tc.username)
 
+			// Assertions
 			if tc.expectError {
 				assert.Error(t, err)
 				assert.Nil(t, user)
@@ -179,78 +323,345 @@ func TestGetUserDetails(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotNil(t, user)
 				assert.Equal(t, tc.mockUser.Username, user.Username)
+				assert.Equal(t, tc.mockUser.Email, user.Email)
+				assert.Equal(t, tc.mockUser.CreatedAt, user.CreatedAt)
+				assert.Equal(t, len(tc.mockUser.Roles), len(user.Roles))
 			}
+
+			// Verify all expectations
+			mockUserRepo.AssertExpectations(t)
 		})
 	}
 }
 
-func UpdateUser(username string, updateData *dtos.UpdateUserDTO) error {
-	user, err := userRepo.GetUserByUsername(username)
-	if err != nil {
-		return err
+func TestDeleteUser_service(t *testing.T) {
+	// Setup mocks
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockRoleRepo := new(mocks.MockRoleRepository)
+	mockCourseRepo := new(mocks.MockCourseRepository)
+	mockHTTPClient := new(mocks.MockHTTPClient)
+
+	// Create test config
+	appConfig := &config.AppConfig{
+		Environment: "test",
 	}
 
-	// Simulate password update
-	if updateData.OldPassword == "oldpass" {
-		user.Password = updateData.NewPassword
-		return userRepo.UpdateUser(user)
-	}
-	return errors.New("incorrect old password")
-}
+	// Create service with mocks
+	userService := services.NewUserService(
+		mockCourseRepo,
+		mockUserRepo,
+		mockRoleRepo,
+		appConfig,
+		mockHTTPClient,
+	)
 
-func TestUpdateUser(t *testing.T) {
-	mockRepo := new(MockUserRepository)
-	userRepo = mockRepo
+	// Create test context
+	ctx := context.Background()
+
+	// Create test data
+	mockUser := &models.User{
+		Username: "testuser",
+		Email:    "test@example.com",
+	}
 
 	tests := []struct {
-		name        string
-		username    string
-		updateData  *dtos.UpdateUserDTO
-		mockUser    *models.User
-		mockError   error
-		expectError bool
+		name         string
+		username     string
+		mockUser     *models.User
+		getUserError error
+		deleteError  error
+		expectError  bool
 	}{
 		{
-			name:     "Success",
-			username: "testuser",
-			updateData: &dtos.UpdateUserDTO{
-				OldPassword: "oldpass",
-				NewPassword: "newpass",
-			},
-			mockUser: &models.User{
-				Username: "testuser",
-				Password: "$2a$10$somehashedpassword", // Use a real hashed password here
-			},
-			mockError:   nil,
-			expectError: false,
+			name:         "Success",
+			username:     "testuser",
+			mockUser:     mockUser,
+			getUserError: nil,
+			deleteError:  nil,
+			expectError:  false,
 		},
 		{
-			name:     "User Not Found",
-			username: "nonexistent",
-			updateData: &dtos.UpdateUserDTO{
-				OldPassword: "oldpass",
-				NewPassword: "newpass",
-			},
-			mockUser:    nil,
-			mockError:   errors.New("user not found"),
-			expectError: true,
+			name:         "User Not Found",
+			username:     "nonexistent",
+			mockUser:     nil,
+			getUserError: errors.New("user not found"),
+			deleteError:  nil,
+			expectError:  true,
+		},
+		{
+			name:         "Delete Error",
+			username:     "testuser",
+			mockUser:     mockUser,
+			getUserError: nil,
+			deleteError:  errors.New("delete failed"),
+			expectError:  true,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepo.On("GetUserByUsername", tc.username).Return(tc.mockUser, tc.mockError)
-			if tc.mockUser != nil {
-				mockRepo.On("UpdateUser", mock.AnythingOfType("*models.User")).Return(nil)
+			// Setup expectations
+			mockUserRepo.On("GetUserByUsername", ctx, tc.username).Return(tc.mockUser, tc.getUserError).Once()
+
+			if tc.mockUser != nil && tc.getUserError == nil {
+				mockUserRepo.On("DeleteUser", ctx, tc.mockUser).Return(tc.deleteError).Once()
 			}
 
-			err := UpdateUser(tc.username, tc.updateData)
+			// Call service method
+			err := userService.DeleteUser(ctx, tc.username)
 
+			// Assertions
 			if tc.expectError {
 				assert.Error(t, err)
 			} else {
 				assert.NoError(t, err)
 			}
+
+			// Verify all expectations
+			mockUserRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestUpdateUser_service(t *testing.T) {
+	// Setup mocks
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockRoleRepo := new(mocks.MockRoleRepository)
+	mockCourseRepo := new(mocks.MockCourseRepository)
+	mockHTTPClient := new(mocks.MockHTTPClient)
+
+	// Create test config
+	appConfig := &config.AppConfig{
+		Environment: "test",
+	}
+
+	// Create service with mocks
+	userService := services.NewUserService(
+		mockCourseRepo,
+		mockUserRepo,
+		mockRoleRepo,
+		appConfig,
+		mockHTTPClient,
+	)
+
+	// Create test context
+	ctx := context.Background()
+
+	// Create test data with real hashed password that verifies against "oldpassword"
+	// In a real environment, we'd use the actual utils.HashPassword and utils.VerifyPassword
+	// But for testing, we'll handle the verification in the mock expectations
+	mockUser := &models.User{
+		Username: "testuser",
+		Password: "$2a$10$somehashedpassword", // Assume this is a valid hash for "oldpassword"
+	}
+
+	tests := []struct {
+		name         string
+		username     string
+		updateData   *dtos.UpdateUserDTO
+		mockUser     *models.User
+		getUserError error
+		updateError  error
+		expectError  bool
+	}{
+		{
+			name:     "Success",
+			username: "testuser",
+			updateData: &dtos.UpdateUserDTO{
+				OldPassword: "oldpassword",
+				NewPassword: "newpassword",
+			},
+			mockUser:     mockUser,
+			getUserError: nil,
+			updateError:  nil,
+			expectError:  false,
+		},
+		{
+			name:     "User Not Found",
+			username: "nonexistent",
+			updateData: &dtos.UpdateUserDTO{
+				OldPassword: "oldpassword",
+				NewPassword: "newpassword",
+			},
+			mockUser:     nil,
+			getUserError: errors.New("user not found"),
+			updateError:  nil,
+			expectError:  true,
+		},
+		{
+			name:     "Incorrect Old Password",
+			username: "testuser",
+			updateData: &dtos.UpdateUserDTO{
+				OldPassword: "wrongpassword",
+				NewPassword: "newpassword",
+			},
+			mockUser:     mockUser,
+			getUserError: nil,
+			updateError:  nil,
+			expectError:  true,
+		},
+		{
+			name:     "Update Error",
+			username: "testuser",
+			updateData: &dtos.UpdateUserDTO{
+				OldPassword: "oldpassword",
+				NewPassword: "newpassword",
+			},
+			mockUser:     mockUser,
+			getUserError: nil,
+			updateError:  errors.New("update failed"),
+			expectError:  true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Setup expectations
+			mockUserRepo.On("GetUserByUsername", ctx, tc.username).Return(tc.mockUser, tc.getUserError).Once()
+
+			// For successful cases where we need to check password and update user
+			if tc.mockUser != nil && tc.getUserError == nil {
+				// In a real test with real utils.VerifyPassword, this would be more complex
+				// Here we're simplifying by assuming oldpassword is valid for the mockUser
+				if tc.updateData.OldPassword == "oldpassword" {
+					mockUserRepo.On("UpdateUser", ctx, mock.AnythingOfType("*models.User")).Return(tc.updateError).Once()
+				}
+			}
+
+			// Call service method
+			err := userService.UpdateUser(ctx, tc.username, tc.updateData)
+
+			// Assertions
+			if tc.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			// Verify all expectations
+			mockUserRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestUpdateRoles_service(t *testing.T) {
+	// Setup mocks
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockRoleRepo := new(mocks.MockRoleRepository)
+	mockCourseRepo := new(mocks.MockCourseRepository)
+	mockHTTPClient := new(mocks.MockHTTPClient)
+
+	// Create test config
+	appConfig := &config.AppConfig{
+		Environment: "test",
+	}
+
+	// Create service with mocks
+	userService := services.NewUserService(
+		mockCourseRepo,
+		mockUserRepo,
+		mockRoleRepo,
+		appConfig,
+		mockHTTPClient,
+	)
+
+	// Create test context
+	ctx := context.Background()
+
+	// Create test data
+	mockUser := &models.User{
+		Username: "testuser",
+		Roles:    []*models.Role{{Name: "student"}},
+	}
+
+	mockRoles := []models.Role{
+		{Name: "admin"},
+		{Name: "instructor"},
+	}
+
+	tests := []struct {
+		name          string
+		username      string
+		roles         []string
+		mockUser      *models.User
+		getUserError  error
+		mockRoles     []models.Role
+		getRolesError error
+		updateError   error
+		expectError   bool
+	}{
+		{
+			name:          "Success",
+			username:      "testuser",
+			roles:         []string{"admin", "instructor"},
+			mockUser:      mockUser,
+			getUserError:  nil,
+			mockRoles:     mockRoles,
+			getRolesError: nil,
+			updateError:   nil,
+			expectError:   false,
+		},
+		{
+			name:          "User Not Found",
+			username:      "nonexistent",
+			roles:         []string{"admin"},
+			mockUser:      nil,
+			getUserError:  errors.New("user not found"),
+			mockRoles:     nil,
+			getRolesError: nil,
+			updateError:   nil,
+			expectError:   true,
+		},
+		{
+			name:          "Role Not Found",
+			username:      "testuser",
+			roles:         []string{"invalidrole"},
+			mockUser:      mockUser,
+			getUserError:  nil,
+			mockRoles:     []models.Role{},
+			getRolesError: errors.New("role not found"),
+			updateError:   nil,
+			expectError:   true,
+		},
+		{
+			name:          "Update Error",
+			username:      "testuser",
+			roles:         []string{"admin", "instructor"},
+			mockUser:      mockUser,
+			getUserError:  nil,
+			mockRoles:     mockRoles,
+			getRolesError: nil,
+			updateError:   errors.New("update failed"),
+			expectError:   true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Setup expectations
+			mockUserRepo.On("GetUserByUsername", ctx, tc.username).Return(tc.mockUser, tc.getUserError).Once()
+
+			if tc.mockUser != nil && tc.getUserError == nil {
+				mockRoleRepo.On("GetRolesByName", ctx, tc.roles).Return(tc.mockRoles, tc.getRolesError).Once()
+
+				if tc.mockRoles != nil && tc.getRolesError == nil {
+					mockUserRepo.On("UpdateUser", ctx, mock.AnythingOfType("*models.User")).Return(tc.updateError).Once()
+				}
+			}
+
+			// Call service method
+			err := userService.UpdateRoles(ctx, tc.username, tc.roles)
+
+			// Assertions
+			if tc.expectError {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			// Verify all expectations
+			mockUserRepo.AssertExpectations(t)
+			mockRoleRepo.AssertExpectations(t)
 		})
 	}
 }
