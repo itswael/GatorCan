@@ -45,6 +45,8 @@ func main() {
 		&models.Course{},
 		&models.ActiveCourse{},
 		&models.Enrollment{},
+		&models.Assignment{},
+		&models.Submission{},
 	)
 	if err != nil {
 		logger.Fatalf("Failed to migrate database: %v", err)
