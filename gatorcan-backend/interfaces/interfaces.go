@@ -55,3 +55,8 @@ type AssignmentRepository interface {
 	GetAssignmentsByCourseID(courseID int) ([]models.Assignment, error)
 	GetAssignmentByIDAndCourseID(assignmentID int, courseID int) (models.Assignment, error)
 }
+
+type AssignmentService interface {
+	GetAssignmentsByCourseID(ctx context.Context, courseID int) ([]dtos.AssignmentResponseDTO, error)
+	GetAssignmentByIDAndCourseID(ctx context.Context, assignmentID int, courseID int) (dtos.AssignmentResponseDTO, error)
+}
