@@ -73,5 +73,9 @@ func UserRoutes(userController *controllers.UserController, courseController *co
 			assignmentController.GetAssignments(c)
 		})
 
+		assignmentGroup.GET("/:id", func(c *gin.Context) {
+			assignmentController.GetAssignment(c)
+		})
+
 	}
 }
