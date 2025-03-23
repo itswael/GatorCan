@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UserRoutes(userController *controllers.UserController, courseController *controllers.CourseController, router *gin.Engine, logger *log.Logger) {
+func UserRoutes(userController *controllers.UserController, courseController *controllers.CourseController, assignmentController *controllers.AssignmentController, router *gin.Engine, logger *log.Logger) {
 
 	//  Public Routes
 	router.POST("/login", func(c *gin.Context) {
@@ -64,5 +64,22 @@ func UserRoutes(userController *controllers.UserController, courseController *co
 		courseGroup.POST("/enroll", func(c *gin.Context) {
 			courseController.EnrollInCourse(c)
 		})
+
+		courseGroup.GET("/:cid", func(c *gin.Context) {
+			courseController.GetCourse(c)
+		})
+		assignmentGroup := router.Group("/:cid/assignments")
+		assignmentGroup.Use(middleware.AuthMiddleware(logger, string(models.Student), string(models.Instructor), string(models.TA)))
+		{
+			assignmentGroup.GET("/", func(c *gin.Context) {
+				assignmentController.GetAssignments(c)
+			})
+
+			assignmentGroup.GET("/:aid", func(c *gin.Context) {
+				assignmentController.GetAssignment(c)
+			})
+
+		}
 	}
+
 }
