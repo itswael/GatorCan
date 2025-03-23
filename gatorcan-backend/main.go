@@ -55,7 +55,8 @@ func main() {
 	// Initialize repositories
 	userRepo := repositories.NewUserRepository(db)
 	courseRepo := repositories.NewCourseRepository(db)
-	roleRepo := repositories.NewRoleRepository(db) // Add missing role repository
+	roleRepo := repositories.NewRoleRepository(db)
+	assignmentRepo := repositories.NewAssignmentRepository(db)
 
 	// Initialize HTTP client with sensible defaults
 	httpClient := &http.Client{
@@ -70,10 +71,12 @@ func main() {
 	// Initialize services with consistent pattern
 	userService := services.NewUserService(courseRepo, userRepo, roleRepo, appConfig, httpClient)
 	courseService := services.NewCourseService(courseRepo, userRepo, appConfig, httpClient)
+	assignmentService := services.NewAssignmentService(assignmentRepo, appConfig, httpClient)
 
 	// Initialize controllers
 	userController := controllers.NewUserController(userService, logger)
 	courseController := controllers.NewCourseController(courseService, logger)
+	assignmentController := controllers.NewAssignmentController(assignmentService, logger)
 
 	// Set up router
 	router := gin.Default()
@@ -82,6 +85,7 @@ func main() {
 	routes.UserRoutes(
 		userController,
 		courseController,
+		assignmentController,
 		router,
 		logger)
 
