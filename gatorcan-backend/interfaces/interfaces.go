@@ -50,3 +50,13 @@ type UserService interface {
 type RoleRepository interface {
 	GetRolesByName(ctx context.Context, roleNames []string) ([]models.Role, error)
 }
+
+type AssignmentRepository interface {
+	GetAssignmentsByCourseID(courseID int) ([]models.Assignment, error)
+	GetAssignmentByIDAndCourseID(assignmentID int, courseID int) (models.Assignment, error)
+}
+
+type AssignmentService interface {
+	GetAssignmentsByCourseID(ctx context.Context, courseID int) ([]dtos.AssignmentResponseDTO, error)
+	GetAssignmentByIDAndCourseID(ctx context.Context, assignmentID int, courseID int) (dtos.AssignmentResponseDTO, error)
+}

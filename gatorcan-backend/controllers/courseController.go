@@ -99,6 +99,10 @@ func (cc *CourseController) GetCourses(c *gin.Context) {
 	c.JSON(http.StatusOK, courses)
 }
 
+func (cc *CourseController) GetCourse(c *gin.Context) {
+	panic("unimplemented")
+}
+
 func (cc *CourseController) EnrollInCourse(c *gin.Context) {
 	cc.logger.Printf("Request: %s %s", c.Request.Method, c.Request.URL.Path)
 
