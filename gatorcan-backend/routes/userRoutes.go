@@ -65,4 +65,13 @@ func UserRoutes(userController *controllers.UserController, courseController *co
 			courseController.EnrollInCourse(c)
 		})
 	}
+
+	assignmentGroup := router.Group("/assignments")
+	assignmentGroup.Use(middleware.AuthMiddleware(logger, string(models.Student), string(models.Instructor), string(models.TA)))
+	{
+		assignmentGroup.GET("/", func(c *gin.Context) {
+			assignmentController.GetAssignments(c)
+		})
+
+	}
 }
