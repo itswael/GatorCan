@@ -64,18 +64,22 @@ func UserRoutes(userController *controllers.UserController, courseController *co
 		courseGroup.POST("/enroll", func(c *gin.Context) {
 			courseController.EnrollInCourse(c)
 		})
+
+		courseGroup.GET("/:cid", func(c *gin.Context) {
+			courseController.GetCourse(c)
+		})
+		assignmentGroup := router.Group("/:cid/assignments")
+		assignmentGroup.Use(middleware.AuthMiddleware(logger, string(models.Student), string(models.Instructor), string(models.TA)))
+		{
+			assignmentGroup.GET("/", func(c *gin.Context) {
+				assignmentController.GetAssignments(c)
+			})
+
+			assignmentGroup.GET("/:aid", func(c *gin.Context) {
+				assignmentController.GetAssignment(c)
+			})
+
+		}
 	}
 
-	assignmentGroup := router.Group("/assignments")
-	assignmentGroup.Use(middleware.AuthMiddleware(logger, string(models.Student), string(models.Instructor), string(models.TA)))
-	{
-		assignmentGroup.GET("/", func(c *gin.Context) {
-			assignmentController.GetAssignments(c)
-		})
-
-		assignmentGroup.GET("/:id", func(c *gin.Context) {
-			assignmentController.GetAssignment(c)
-		})
-
-	}
 }
