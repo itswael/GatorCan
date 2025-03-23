@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func UserRoutes(userController *controllers.UserController, courseController *controllers.CourseController, router *gin.Engine, logger *log.Logger) {
+func UserRoutes(userController *controllers.UserController, courseController *controllers.CourseController, assignmentController *controllers.AssignmentController, router *gin.Engine, logger *log.Logger) {
 
 	//  Public Routes
 	router.POST("/login", func(c *gin.Context) {
