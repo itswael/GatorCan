@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	dtos "gatorcan-backend/DTOs"
 	"gatorcan-backend/config"
 	"gatorcan-backend/interfaces"
 )
