@@ -188,7 +188,6 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, username string, updat
 	if err != nil {
 		return err
 	}
-
 	if !utils.VerifyPassword(user.Password, updateData.OldPassword) {
 		return errors.New("incorrect old password")
 	}

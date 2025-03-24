@@ -8,6 +8,7 @@ import (
 	"gatorcan-backend/models"
 	"gatorcan-backend/services"
 	"gatorcan-backend/unit_tests/mocks"
+	"gatorcan-backend/utils"
 	"io"
 	"log"
 	"net/http"
@@ -460,7 +461,7 @@ func TestUpdateUser_service(t *testing.T) {
 	// But for testing, we'll handle the verification in the mock expectations
 	mockUser := &models.User{
 		Username: "testuser",
-		Password: "$2a$10$somehashedpassword", // Assume this is a valid hash for "oldpassword"
+		Password: "$2a$10$lzMH9m8LQl7C.T1Njke90OS2U5xiM8DRr1sQcGDrXh8M1VzsitcS.", // Assume this is a valid hash for "oldpassword"
 	}
 
 	tests := []struct {
@@ -527,11 +528,8 @@ func TestUpdateUser_service(t *testing.T) {
 			// Setup expectations
 			mockUserRepo.On("GetUserByUsername", ctx, tc.username).Return(tc.mockUser, tc.getUserError).Once()
 
-			// For successful cases where we need to check password and update user
 			if tc.mockUser != nil && tc.getUserError == nil {
-				// In a real test with real utils.VerifyPassword, this would be more complex
-				// Here we're simplifying by assuming oldpassword is valid for the mockUser
-				if tc.updateData.OldPassword == "oldpassword" {
+				if utils.VerifyPassword(tc.mockUser.Password, tc.updateData.OldPassword) {
 					mockUserRepo.On("UpdateUser", ctx, mock.AnythingOfType("*models.User")).Return(tc.updateError).Once()
 				}
 			}
@@ -545,7 +543,6 @@ func TestUpdateUser_service(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-
 			// Verify all expectations
 			mockUserRepo.AssertExpectations(t)
 		})
