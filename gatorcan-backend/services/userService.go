@@ -9,6 +9,7 @@ import (
 	"gatorcan-backend/interfaces"
 	"gatorcan-backend/models"
 	"gatorcan-backend/utils"
+	"log"
 	"net/http"
 
 	"gorm.io/gorm"
@@ -90,7 +91,7 @@ func (s *UserServiceImpl) Login(ctx context.Context, loginData *dtos.LoginReques
 	return &response, nil
 }
 
-func (s *UserServiceImpl) CreateUser(ctx context.Context, userData *dtos.UserRequestDTO) (*dtos.UserResponseDTO, error) {
+func (s *UserServiceImpl) CreateUser(ctx context.Context, logger *log.Logger, userData *dtos.UserRequestDTO) (*dtos.UserResponseDTO, error) {
 	var response dtos.UserResponseDTO
 
 	//roleRepo := repositories.NewRolesRepository()
@@ -187,7 +188,6 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, username string, updat
 	if err != nil {
 		return err
 	}
-
 	if !utils.VerifyPassword(user.Password, updateData.OldPassword) {
 		return errors.New("incorrect old password")
 	}

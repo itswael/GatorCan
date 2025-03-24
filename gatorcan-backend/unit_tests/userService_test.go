@@ -8,11 +8,15 @@ import (
 	"gatorcan-backend/models"
 	"gatorcan-backend/services"
 	"gatorcan-backend/unit_tests/mocks"
+	"gatorcan-backend/utils"
+	"io"
+	"log"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 )
 
 func TestLogin_service(t *testing.T) {
@@ -144,6 +148,7 @@ func TestCreateUser_service(t *testing.T) {
 
 	// Create test context
 	ctx := context.Background()
+	logger := log.New(io.Discard, "", 0)
 
 	tests := []struct {
 		name             string
@@ -210,30 +215,34 @@ func TestCreateUser_service(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup expectations
-			mockUserRepo.On("GetUserByUsernameorEmail", ctx, tc.userData.Username, tc.userData.Email).
-				Return(tc.mockExistingUser, func() error {
-					if tc.mockExistingUser != nil {
-						return nil
-					}
-					return errors.New("record not found")
-				}()).Once()
+			if tc.mockExistingUser == nil {
+				// No user exists so we simulate "record not found" with gorm.ErrRecordNotFound.
+				mockUserRepo.On("GetUserByUsernameorEmail", ctx, tc.userData.Username, tc.userData.Email).
+					Return(nil, gorm.ErrRecordNotFound).Once()
+			} else {
+				// Existing user found.
+				mockUserRepo.On("GetUserByUsernameorEmail", ctx, tc.userData.Username, tc.userData.Email).
+					Return(tc.mockExistingUser, nil).Once()
+			}
 
 			if tc.mockExistingUser == nil {
 				mockRoleRepo.On("GetRolesByName", ctx, tc.userData.Roles).
 					Return(tc.mockRoles, func() error {
-						if tc.mockRoles == nil {
+						// If no valid roles found (empty slice), return an error.
+						if len(tc.mockRoles) == 0 {
 							return errors.New("role not found")
 						}
 						return nil
 					}()).Maybe()
 
-				if tc.mockRoles != nil {
-					mockUserRepo.On("CreateNewUser", ctx, mock.AnythingOfType("*dtos.UserCreateDTO")).Return(tc.mockNewUser, nil).Maybe()
+				if len(tc.mockRoles) > 0 {
+					mockUserRepo.On("CreateNewUser", ctx, mock.AnythingOfType("*dtos.UserCreateDTO")).
+						Return(tc.mockNewUser, nil).Maybe()
 				}
 			}
 
 			// Call service method
-			response, err := userService.CreateUser(ctx, tc.userData)
+			response, err := userService.CreateUser(ctx, logger, tc.userData)
 
 			// Assertions
 			if tc.expectError {
@@ -452,7 +461,7 @@ func TestUpdateUser_service(t *testing.T) {
 	// But for testing, we'll handle the verification in the mock expectations
 	mockUser := &models.User{
 		Username: "testuser",
-		Password: "$2a$10$somehashedpassword", // Assume this is a valid hash for "oldpassword"
+		Password: "$2a$10$lzMH9m8LQl7C.T1Njke90OS2U5xiM8DRr1sQcGDrXh8M1VzsitcS.", // Assume this is a valid hash for "oldpassword"
 	}
 
 	tests := []struct {
@@ -519,11 +528,8 @@ func TestUpdateUser_service(t *testing.T) {
 			// Setup expectations
 			mockUserRepo.On("GetUserByUsername", ctx, tc.username).Return(tc.mockUser, tc.getUserError).Once()
 
-			// For successful cases where we need to check password and update user
 			if tc.mockUser != nil && tc.getUserError == nil {
-				// In a real test with real utils.VerifyPassword, this would be more complex
-				// Here we're simplifying by assuming oldpassword is valid for the mockUser
-				if tc.updateData.OldPassword == "oldpassword" {
+				if utils.VerifyPassword(tc.mockUser.Password, tc.updateData.OldPassword) {
 					mockUserRepo.On("UpdateUser", ctx, mock.AnythingOfType("*models.User")).Return(tc.updateError).Once()
 				}
 			}
@@ -537,7 +543,6 @@ func TestUpdateUser_service(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 			}
-
 			// Verify all expectations
 			mockUserRepo.AssertExpectations(t)
 		})

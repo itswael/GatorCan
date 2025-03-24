@@ -6,21 +6,19 @@ import (
 	"gatorcan-backend/database"
 	"gatorcan-backend/middleware"
 	"gatorcan-backend/models"
-	"golang.org/x/crypto/bcrypt"
+	"log"
 	"time"
 
-	"gatorcan-backend/utils"
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/gin-gonic/gin"
 )
 
 // SetupTestRouter initializes a test Gin router
-func SetupTestRouter() *gin.Engine {
-	logger := utils.Log()
+func SetupTestRouter(userController *controllers.UserController, courseController *controllers.CourseController, assignmentController *controllers.AssignmentController, router *gin.Engine, logger *log.Logger) *gin.Engine {
 	gin.SetMode(gin.TestMode)
-	router := gin.Default()
 	router.POST("/login", func(c *gin.Context) {
-		controllers.Login(c, logger)
+		userController.Login(c, logger)
 	})
 
 	// Admin-only Routes

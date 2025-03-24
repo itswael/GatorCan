@@ -42,7 +42,7 @@ type UserService interface {
 	Login(ctx context.Context, loginData *dtos.LoginRequestDTO) (*dtos.LoginResponseDTO, error)
 	GetUserDetails(ctx context.Context, username string) (*models.User, error)
 	UpdateUser(ctx context.Context, username string, user *dtos.UpdateUserDTO) error
-	CreateUser(ctx context.Context, user *dtos.UserRequestDTO) (*dtos.UserResponseDTO, error)
+	CreateUser(ctx context.Context, logger *log.Logger, user *dtos.UserRequestDTO) (*dtos.UserResponseDTO, error)
 	DeleteUser(ctx context.Context, username string) error
 	UpdateRoles(ctx context.Context, username string, roles []string) error
 }
