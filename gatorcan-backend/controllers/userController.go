@@ -45,7 +45,7 @@ func (uc *UserController) CreateUser(c *gin.Context, logger *log.Logger) {
 		return
 	}
 
-	response, err := uc.userService.CreateUser(ctx, userRequest)
+	response, err := uc.userService.CreateUser(ctx, uc.logger, userRequest)
 	if err != nil {
 		c.JSON(response.Code, gin.H{"error": response.Message})
 		logger.Printf("Error in CreateUser service: %v", err)

@@ -8,11 +8,14 @@ import (
 	"gatorcan-backend/models"
 	"gatorcan-backend/services"
 	"gatorcan-backend/unit_tests/mocks"
+	"io"
+	"log"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 )
 
 func TestLogin_service(t *testing.T) {
@@ -144,6 +147,7 @@ func TestCreateUser_service(t *testing.T) {
 
 	// Create test context
 	ctx := context.Background()
+	logger := log.New(io.Discard, "", 0)
 
 	tests := []struct {
 		name             string
@@ -210,30 +214,34 @@ func TestCreateUser_service(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup expectations
-			mockUserRepo.On("GetUserByUsernameorEmail", ctx, tc.userData.Username, tc.userData.Email).
-				Return(tc.mockExistingUser, func() error {
-					if tc.mockExistingUser != nil {
-						return nil
-					}
-					return errors.New("record not found")
-				}()).Once()
+			if tc.mockExistingUser == nil {
+				// No user exists so we simulate "record not found" with gorm.ErrRecordNotFound.
+				mockUserRepo.On("GetUserByUsernameorEmail", ctx, tc.userData.Username, tc.userData.Email).
+					Return(nil, gorm.ErrRecordNotFound).Once()
+			} else {
+				// Existing user found.
+				mockUserRepo.On("GetUserByUsernameorEmail", ctx, tc.userData.Username, tc.userData.Email).
+					Return(tc.mockExistingUser, nil).Once()
+			}
 
 			if tc.mockExistingUser == nil {
 				mockRoleRepo.On("GetRolesByName", ctx, tc.userData.Roles).
 					Return(tc.mockRoles, func() error {
-						if tc.mockRoles == nil {
+						// If no valid roles found (empty slice), return an error.
+						if len(tc.mockRoles) == 0 {
 							return errors.New("role not found")
 						}
 						return nil
 					}()).Maybe()
 
-				if tc.mockRoles != nil {
-					mockUserRepo.On("CreateNewUser", ctx, mock.AnythingOfType("*dtos.UserCreateDTO")).Return(tc.mockNewUser, nil).Maybe()
+				if len(tc.mockRoles) > 0 {
+					mockUserRepo.On("CreateNewUser", ctx, mock.AnythingOfType("*dtos.UserCreateDTO")).
+						Return(tc.mockNewUser, nil).Maybe()
 				}
 			}
 
 			// Call service method
-			response, err := userService.CreateUser(ctx, tc.userData)
+			response, err := userService.CreateUser(ctx, logger, tc.userData)
 
 			// Assertions
 			if tc.expectError {
