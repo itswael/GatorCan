@@ -28,3 +28,8 @@ func (a *assignmentRepository) GetAssignmentByIDAndCourseID(assignmentID int, co
 func (a *assignmentRepository) GetAssignmentsByCourseID(courseID int) ([]models.Assignment, error) {
 	panic("unimplemented")
 }
+
+func (a *assignmentRepository) UploadFileToAssignment(assignmentID int, courseID int) (models.Assignment, error) {
+	panic("unimplemented")
+
+}

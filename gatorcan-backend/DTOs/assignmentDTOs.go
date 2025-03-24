@@ -22,3 +22,10 @@ type AssignmentResponseDTO struct {
 	Grade          int       `json:"grade"`
 	Feedback       string    `json:"feedback"`
 }
+
+type UpdateAssignmentDTO struct {
+	Title       *string `json:"title,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Deadline    *string `json:"deadline,omitempty"`
+	MaxPoints   *int    `json:"max_points,omitempty"`
+}
