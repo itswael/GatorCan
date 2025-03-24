@@ -40,7 +40,7 @@ type MockUserService struct {
 	mock.Mock
 }
 
-func (m *MockUserService) CreateUser(ctx context.Context, dto *dtos.UserRequestDTO) (*dtos.UserResponseDTO, error) {
+func (m *MockUserService) CreateUser(ctx context.Context, logger *log.Logger, dto *dtos.UserRequestDTO) (*dtos.UserResponseDTO, error) {
 	args := m.Called(ctx, dto)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
