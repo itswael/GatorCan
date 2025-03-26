@@ -18,9 +18,6 @@ type AssignmentResponseDTO struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 	ActiveCourseID uint      `json:"course_id"`
 	MaxPoints      int       `json:"max_points"`
-	FileURL        string    `json:"url"`
-	Grade          int       `json:"grade"`
-	Feedback       string    `json:"feedback"`
 }
 
 type UpdateAssignmentDTO struct {

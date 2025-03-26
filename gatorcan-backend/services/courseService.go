@@ -64,6 +64,9 @@ func (s *CourseServiceImpl) GetEnrolledCourses(ctx context.Context, logger *log.
 		course.EndDate = enrollment.ActiveCourse.EndDate
 		var instructor *models.User
 		instructor, err = s.userRepo.GetUserByID(ctx, enrollment.ActiveCourse.InstructorID)
+		if err != nil {
+			return nil, errors.ErrFailedToFetch
+		}
 		course.InstructorName = instructor.Username
 		course.InstructorEmail = instructor.Email
 		enrolledCourses = append(enrolledCourses, course)
@@ -169,7 +172,7 @@ func sendDiscordWebhook(userID, courseID uint) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Discord webhook returned non-200 status: %d", resp.StatusCode)
+		return fmt.Errorf("discord webhook returned non-200 status: %d", resp.StatusCode)
 	}
 
 	return nil

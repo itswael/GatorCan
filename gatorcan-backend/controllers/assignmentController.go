@@ -3,9 +3,11 @@ package controllers
 import (
 	"context"
 	dtos "gatorcan-backend/DTOs"
+	"gatorcan-backend/errors"
 	"gatorcan-backend/interfaces"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -53,34 +55,67 @@ func (ac *AssignmentController) GetSubmission(c *gin.Context) {
 	panic("implement me")
 }
 
-func (ac *AssignmentController) UploadFilesToAssignment(c *gin.Context) {
+func (ac *AssignmentController) UploadFileToAssignment(c *gin.Context) {
 	ac.logger.Printf("Request: %s %s", c.Request.Method, c.Request.URL.Path)
+
 	// Create context with timeout
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
+
+	// Get username from JWT token
 	username, exists := c.Get("username")
 	if !exists {
+		ac.logger.Printf("Unauthorized access attempt to upload file to assignment")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	usernameStr, ok := username.(string)
-	if !ok {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve username"})
+	// Extract courseID and assignmentID from URL parameters
+	courseIDParam := c.Param("cid")
+	assignmentIDParam := c.Param("aid")
+
+	// You can convert them to integer if needed (e.g., using strconv.Atoi)
+	courseID, err := strconv.Atoi(courseIDParam)
+	if err != nil {
+		ac.logger.Printf("Invalid course ID: %s", courseIDParam)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course ID"})
+		return
+	}
+	assignmentID, err := strconv.Atoi(assignmentIDParam)
+	if err != nil {
+		ac.logger.Printf("Invalid assignment ID: %s", assignmentIDParam)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid assignment ID"})
 		return
 	}
 
-	var request dtos.UploadFileToAssignmentDTO
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+	// Parse the rest of the request body (e.g., file_url, filename, file_type)
+	var uploadData dtos.UploadFileToAssignmentDTO
+	// Override the IDs in uploadData with the ones from the URL
+	uploadData.CourseID = uint(courseID)
+	uploadData.AssignmentID = uint(assignmentID)
+
+	if err := c.ShouldBindJSON(&uploadData); err != nil {
+		ac.logger.Printf("Failed to parse request body: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse request body"})
 		return
 	}
-	// Call the service to upload the file
-	response, err := ac.assignmentService.UploadFileToAssignment(ctx, ac.logger, usernameStr, &request)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file"})
+
+	// Call the service to handle the business logic
+	response, err := ac.assignmentService.UploadFileToAssignment(ctx, ac.logger, username.(string), &uploadData)
+	if err == errors.ErrUserNotFound {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	} else if err == errors.ErrCourseNotFound {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
+		return
+	} else if err == errors.ErrAssignmentNotFound {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Assignment not found"})
+		return
+	} else if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to assignment"})
 		return
 	}
-	c.JSON(http.StatusOK, response)
-	return
+
+	// Return the response
+	c.JSON(http.StatusCreated, response)
 }
