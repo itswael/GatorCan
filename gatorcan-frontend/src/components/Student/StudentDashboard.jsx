@@ -8,7 +8,7 @@ import MarkUnreadChatAltIcon from "@mui/icons-material/MarkUnreadChatAlt";
 import FolderCopyIcon from "@mui/icons-material/FolderCopy";
 import { Container } from "@mui/material";
 import StudentNavbar from "./StudentNavbar";
-import CourseService from "../services/CourseService";
+import CourseService from "../../services/CourseService";
 import { useState, useEffect } from "react";
 
 import React from 'react'

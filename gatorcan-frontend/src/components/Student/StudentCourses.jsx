@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import StudentNavbar from "./StudentNavbar";
-import CourseService from "../services/CourseService";
+import CourseService from "../../services/CourseService";
 
 function StudentCourses() {
   const [allCourses, setAllCourses] = useState([]);

@@ -1,7 +1,7 @@
 import Avatar from "@mui/material/Avatar";
 import { Typography, Container, Box, Button } from "@mui/material";
 import StudentNavbar from "./StudentNavbar";
-import { getUserDetails, resetPassword } from "../services/UserService";
+import { getUserDetails, resetPassword } from "../../services/UserService";
 import { useState, useEffect, useRef } from "react";
 import CircularProgress from "@mui/material/CircularProgress";
 

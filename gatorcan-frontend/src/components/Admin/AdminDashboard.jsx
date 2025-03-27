@@ -1,18 +1,7 @@
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
 
-import { useRef, useState, useEffect } from "react";
-
-import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
-import Toolbar from "@mui/material/Toolbar";
-import IconButton from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
-import Menu from "@mui/material/Menu";
-import Container from "@mui/material/Container";
-import Avatar from "@mui/material/Avatar";
-import Tooltip from "@mui/material/Tooltip";
-import MenuItem from "@mui/material/MenuItem";
 
 import Grid from "@mui/material/Grid";
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
@@ -25,9 +14,13 @@ import PersonSearchOutlinedIcon from "@mui/icons-material/PersonSearchOutlined";
 import ContentPasteSearchOutlinedIcon from "@mui/icons-material/ContentPasteSearchOutlined";
 import QueryStatsOutlinedIcon from "@mui/icons-material/QueryStatsOutlined";
 
-import UserRegistration from "./Admin/Tools/UserRegistration";
-import UserDeletion from "./Admin/Tools/UserDeletion";
-import UserRolesUpdation from "./Admin/Tools/UserRolesUpdation";
+import UserRegistration from "./Tools/UserRegistration";
+import UserDeletion from "./Tools/UserDeletion";
+import UserRolesUpdation from "./Tools/UserRolesUpdation";
+
+import { useState } from "react";
+
+import AdminNavbar from "./AdminNavbar";
 
 import {
   Card,
@@ -35,31 +28,9 @@ import {
   CardContent,
 } from "@mui/material";
 
-const settings = ["Profile", "Logout"];
-
 function AdminDashboard() {
-  const navigate = useNavigate();
 
   const [currPage, setCurrPage] = useState(-1);
-
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/login", { replace: true });
-  };
-
-  const [anchorElUser, setAnchorElUser] = React.useState(null);
-
-  const handleOpenUserMenu = (event) => {
-    setAnchorElUser(event.currentTarget);
-  };
-
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
-  };
-
-  // const addUser = () => {
-  //  navigate("/user-registration");
-  // }
 
   const tools = [
     [<PersonAddOutlinedIcon />, "LightSalmon", "Add User"],
@@ -75,69 +46,7 @@ function AdminDashboard() {
 
   return (
     <div>
-      <AppBar position="static">
-        <Container maxWidth="xl">
-          <Toolbar disableGutters>
-            <Typography
-              variant="h6"
-              noWrap
-              component="a"
-              href="/"
-              sx={{
-                mr: 2,
-                display: { xs: "none", md: "flex" },
-                fontFamily: "monospace",
-                fontWeight: 700,
-                letterSpacing: ".2rem",
-                color: "inherit",
-                textDecoration: "none",
-              }}
-              onClick={(e) => {}}
-            >
-              GATORCAN-ADMIN
-            </Typography>
-
-            <Box sx={{ flexGrow: 1 }} />
-
-            <Box sx={{ flexGrow: 0 }}>
-              <Tooltip title="Open settings">
-                <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                  <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
-                </IconButton>
-              </Tooltip>
-              <Menu
-                sx={{ mt: "45px" }}
-                id="menu-appbar"
-                anchorEl={anchorElUser}
-                anchorOrigin={{
-                  vertical: "top",
-                  horizontal: "right",
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "right",
-                }}
-                open={Boolean(anchorElUser)}
-                onClose={handleCloseUserMenu}
-              >
-                {settings.map((setting) => (
-                  <MenuItem
-                    key={setting}
-                    onClick={
-                      setting === "Logout" ? handleLogout : handleCloseUserMenu
-                    }
-                  >
-                    <Typography sx={{ textAlign: "center" }}>
-                      {setting}
-                    </Typography>
-                  </MenuItem>
-                ))}
-              </Menu>
-            </Box>
-          </Toolbar>
-        </Container>
-      </AppBar>
+      <AdminNavbar/>
       <Box
         display="flex"
         justifyContent="center"
