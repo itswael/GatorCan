@@ -48,23 +48,6 @@ function StudentDashboard() {
   }, []);
 
   const colors = ["forestgreen", "darkorchid", "MediumVioletRed"];
-  const courses = [
-    [
-      "CAP5771 - Intro to Data Science",
-      "CAP5771 - Intro to Data Science CAP5771 Spring 2025",
-      "forestgreen",
-    ],
-    [
-      "CEN5035 - Software Engineering",
-      "CEN5035 - Software Engineering CEN5035 Spring 2025",
-      "darkorchid",
-    ],
-    [
-      "COP5556 - Program Language Principles",
-      "COP5556 - Program Language Principles COP5556 Spring 2025",
-      "MediumVioletRed",
-    ],
-  ];
 
   return (
     <>
