@@ -70,7 +70,6 @@ func (a *assignmentRepository) UploadFileToAssignment(ctx context.Context, logge
 	// Prepare the response DTO.
 	response := &dtos.UploadFileToAssignmentResponseDTO{
 		AssignmentID: assignmentFile.AssignmentID,
-		FileID:       assignmentFile.ID,
 		FileName:     assignmentFile.FileName,
 		FileURL:      assignmentFile.FileURL,
 		FileType:     assignmentFile.FileType,

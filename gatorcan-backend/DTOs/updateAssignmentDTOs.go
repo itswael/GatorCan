@@ -10,21 +10,21 @@ type UploadFileToAssignmentDTO struct {
 	CourseID     uint   `json:"course_id" binding:"required"`
 }
 
+type UpdateAssignmentDTO struct {
+	Title       *string `json:"title,omitempty"`
+	Description *string `json:"description,omitempty"`
+	Deadline    *string `json:"deadline,omitempty"`
+	MaxPoints   *int    `json:"max_points,omitempty"`
+}
+
 type UploadFileToAssignmentResponseDTO struct {
 	AssignmentID uint      `json:"assignment_id"`
-	FileID       uint      `json:"file_id"`
 	FileName     string    `json:"filename"`
 	FileType     string    `json:"file_type"`
 	FileURL      string    `json:"file_url"`
 	UploadedAt   time.Time `json:"uploaded_at"`
 	UploaderID   uint      `json:"uploader_id"`
 	CourseID     uint      `json:"course_id"`
-}
-
-type SubmitAssignmentDTO struct {
-	AssignmentID  uint   `json:"assignment_id" binding:"required"`
-	UserID        uint   `json:"user_id" binding:"required"`
-	SubmissionURL string `json:"submission_url" binding:"required"`
 }
 
 type GradeAssignmentDTO struct {

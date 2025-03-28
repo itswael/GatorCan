@@ -7,6 +7,9 @@ type AssignmentRequestDTO struct {
 	Description string `json:"description"`
 	Deadline    string `json:"deadline" binding:"required"`
 	MaxPoints   int    `json:"max_points"`
+	FileURL     string `json:"url"`
+	Grade       int    `json:"grade"`
+	Feedback    string `json:"feedback"`
 }
 
 type AssignmentResponseDTO struct {
@@ -18,11 +21,4 @@ type AssignmentResponseDTO struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 	ActiveCourseID uint      `json:"course_id"`
 	MaxPoints      int       `json:"max_points"`
-}
-
-type UpdateAssignmentDTO struct {
-	Title       *string `json:"title,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Deadline    *string `json:"deadline,omitempty"`
-	MaxPoints   *int    `json:"max_points,omitempty"`
 }
