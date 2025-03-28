@@ -68,7 +68,7 @@ func UserRoutes(userController *controllers.UserController, courseController *co
 		courseGroup.GET("/:cid", func(c *gin.Context) {
 			courseController.GetCourse(c)
 		})
-		assignmentGroup := router.Group("/:cid/assignments")
+		assignmentGroup := courseGroup.Group("/:cid/assignments")
 		assignmentGroup.Use(middleware.AuthMiddleware(logger, string(models.Student), string(models.Instructor), string(models.TA)))
 		{
 			assignmentGroup.GET("/", func(c *gin.Context) {
@@ -77,6 +77,10 @@ func UserRoutes(userController *controllers.UserController, courseController *co
 
 			assignmentGroup.GET("/:aid", func(c *gin.Context) {
 				assignmentController.GetAssignment(c)
+			})
+
+			assignmentGroup.POST("/:aid/upload", func(c *gin.Context) {
+				assignmentController.UploadFileToAssignment(c)
 			})
 
 		}
