@@ -47,6 +47,8 @@ func main() {
 		&models.Enrollment{},
 		&models.Assignment{},
 		&models.Submission{},
+		&models.AssignmentFile{},
+		&models.UserAssignmentFile{},
 	)
 	if err != nil {
 		logger.Fatalf("Failed to migrate database: %v", err)
@@ -71,7 +73,7 @@ func main() {
 	// Initialize services with consistent pattern
 	userService := services.NewUserService(courseRepo, userRepo, roleRepo, appConfig, httpClient)
 	courseService := services.NewCourseService(courseRepo, userRepo, appConfig, httpClient)
-	assignmentService := services.NewAssignmentService(assignmentRepo, appConfig, httpClient)
+	assignmentService := services.NewAssignmentService(assignmentRepo, userRepo, courseRepo, appConfig, httpClient)
 
 	// Initialize controllers
 	userController := controllers.NewUserController(userService, logger)
