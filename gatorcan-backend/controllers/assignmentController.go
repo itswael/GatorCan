@@ -29,7 +29,33 @@ func (ac *AssignmentController) GetAssignments(c *gin.Context) {
 	panic("implement me")
 }
 func (ac *AssignmentController) GetAssignment(c *gin.Context) {
-	panic("implement me")
+	ac.logger.Printf("Request: %s %s", c.Request.Method, c.Request.URL.Path)
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	// Extract courseID from URL parameters
+	courseIDParam := c.Param("cid")
+	assignmentIDParam := c.Param("aid")
+	assignmentID, err := strconv.Atoi(assignmentIDParam)
+	courseID, err := strconv.Atoi(courseIDParam)
+	if err != nil {
+		ac.logger.Printf("Invalid course ID: %s", courseIDParam)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course ID"})
+		return
+	}
+	// Call the service layer to fetch assignments
+	assignments, err := ac.assignmentService.GetAssignmentByIDAndCourseID(ctx, assignmentID, courseID)
+	if err == errors.ErrAssignmentNotFound {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Assignment not found"})
+		return
+	} else if err != nil {
+		ac.logger.Printf("error getting assignments: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error getting assignments"})
+		return
+	}
+	// Return the assignments as JSON response
+	c.JSON(http.StatusOK, gin.H{"assignments": assignments})
 }
 
 func (ac *AssignmentController) CreateAssignment(c *gin.Context) {
