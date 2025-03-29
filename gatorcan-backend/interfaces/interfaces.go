@@ -64,3 +64,11 @@ type AssignmentService interface {
 	GetAssignmentByIDAndCourseID(ctx context.Context, assignmentID int, courseID int) (dtos.AssignmentResponseDTO, error)
 	UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error)
 }
+
+type SubmissionRepository interface {
+	GradeSubmission(ctx context.Context, assignmentID uint, courseID uint, userID uint, grade float64, feedback string) error
+}
+
+type SubmissionService interface {
+	GradeSubmission(ctx context.Context, logger *log.Logger, username string, submissionData *dtos.GradeSubmissionRequestDTO) (*dtos.GradeSubmissionResponseDTO, error)
+}
