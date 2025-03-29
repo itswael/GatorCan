@@ -16,11 +16,11 @@ type EnrolledCoursesResponseDTO struct {
 }
 
 type CourseResponseDTO struct {
-	ID          uint      `json:"id"`
-	Name        string    `json:"name"`
-	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID              uint   `json:"id"`
+	Name            string `json:"name"`
+	Description     string `json:"description"`
+	InstructorName  string `json:"instructorName"`
+	InstructorEmail string `json:"instructorEmail"`
 }
 
 // Convert model courses to DTOs
@@ -31,8 +31,6 @@ func ConvertToCourseResponseDTOs(courses []models.Course) []CourseResponseDTO {
 			ID:          course.ID,
 			Name:        course.Name,
 			Description: course.Description,
-			CreatedAt:   course.CreatedAt,
-			UpdatedAt:   course.UpdatedAt,
 		}
 	}
 	return courseResponseDTOs
