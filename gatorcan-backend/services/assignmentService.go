@@ -25,7 +25,26 @@ func (s *AssignmentService) GetAssignmentsByCourseID(ctx context.Context, course
 	panic("not implemented")
 }
 func (s *AssignmentService) GetAssignmentByIDAndCourseID(ctx context.Context, assignmentID int, courseID int) (dtos.AssignmentResponseDTO, error) {
-	panic("not implemented")
+	assignment, err := s.assignmentRepo.GetAssignmentByIDAndCourseID(ctx, assignmentID, courseID)
+	if err != nil {
+		return dtos.AssignmentResponseDTO{}, errors.ErrAssignmentNotFound
+	}
+
+	_, err = s.courseRepo.GetCourseByID(ctx, courseID)
+	if err != nil {
+		return dtos.AssignmentResponseDTO{}, errors.ErrCourseNotFound
+	}
+
+	assignmentResponse := dtos.AssignmentResponseDTO{
+		ID:             assignment.ID,
+		Title:          assignment.Title,
+		Description:    assignment.Description,
+		Deadline:       assignment.Deadline,
+		ActiveCourseID: assignment.ActiveCourseID,
+		MaxPoints:      assignment.MaxPoints,
+	}
+
+	return assignmentResponse, nil
 }
 
 func (s *AssignmentService) UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error) {
