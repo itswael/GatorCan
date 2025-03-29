@@ -13,8 +13,11 @@ type Submission struct {
 	gorm.Model
 	ID           uint       `gorm:"primaryKey" json:"id"`
 	AssignmentID uint       `json:"assignment_id"`
+	CourseID     uint       `json:"course_id"`
 	UserID       uint       `json:"user_id"`
 	File_url     string     `json:"file_url"`
+	File_name    string     `json:"file_name"`
+	File_type    string     `json:"file_type"`
 	Grade        int        `json:"grade"`
 	Feedback     string     `json:"feedback"`
 	Created_at   time.Time  `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`
@@ -22,4 +25,5 @@ type Submission struct {
 	Deleted_at   time.Time  `json:"deleted_at" gorm:"default:CURRENT_TIMESTAMP"`
 	Assignment   Assignment `gorm:"foreignKey:AssignmentID"`
 	User         User       `gorm:"foreignKey:UserID"`
+	Course       Course     `gorm:"foreignKey:CourseID"`
 }
