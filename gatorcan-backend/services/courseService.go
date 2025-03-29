@@ -93,6 +93,37 @@ func (s *CourseServiceImpl) GetCourses(ctx context.Context, logger *log.Logger, 
 	return dtos.ConvertToCourseResponseDTOs(courses), nil
 }
 
+func (s *CourseServiceImpl) GetCourseByID(ctx context.Context, logger *log.Logger, courseID int) (dtos.CourseResponseDTO, error) {
+	activeCourse, err := s.courseRepo.GetCourseByID(ctx, courseID)
+	if err != nil {
+		logger.Printf("course not found: %d %d", courseID, 404)
+		return dtos.CourseResponseDTO{}, errors.ErrCourseNotFound
+	}
+
+	// get course details and instructor details
+	course, err := s.courseRepo.GetCourseDetails(ctx, activeCourse.CourseID)
+	if err != nil {
+		logger.Printf("course not found: %d %d", courseID, 404)
+		return dtos.CourseResponseDTO{}, errors.ErrCourseNotFound
+	}
+
+	instructor, err := s.userRepo.GetUserByID(ctx, activeCourse.InstructorID)
+	if err != nil {
+		logger.Printf("instructor not found: %d %d", activeCourse.InstructorID, 404)
+		return dtos.CourseResponseDTO{}, errors.ErrUserNotFound
+	}
+
+	courseDTO := dtos.CourseResponseDTO{
+		ID:              course.ID,
+		Name:            course.Name,
+		Description:     course.Description,
+		InstructorName:  instructor.Username,
+		InstructorEmail: instructor.Email,
+	}
+
+	return courseDTO, nil
+}
+
 func (s *CourseServiceImpl) EnrollUser(ctx context.Context, logger *log.Logger, username string, courseID int) error {
 
 	user, err := s.userRepo.GetUserByUsername(ctx, username)
