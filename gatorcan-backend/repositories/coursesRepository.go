@@ -17,6 +17,7 @@ type CourseRepository interface {
 	ApproveEnrollment(ctx context.Context, enrollmentID uint) error
 	RejectEnrollment(ctx context.Context, enrollmentID uint) error
 	GetPendingEnrollments(ctx context.Context) ([]models.Enrollment, error)
+	GetCourseDetails(ctx context.Context, courseID uint) (models.Course, error)
 }
 
 type courseRepository struct {
@@ -46,6 +47,14 @@ func (r *courseRepository) GetCourseByID(ctx context.Context, courseID int) (mod
 		return models.ActiveCourse{}, errors.New("course not found")
 	}
 
+	return course, nil
+}
+
+func (r *courseRepository) GetCourseDetails(ctx context.Context, courseID uint) (models.Course, error) {
+	var course models.Course
+	if err := r.db.WithContext(ctx).First(&course, courseID).Error; err != nil {
+		return models.Course{}, errors.New("course not found")
+	}
 	return course, nil
 }
 

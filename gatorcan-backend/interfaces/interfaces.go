@@ -16,6 +16,7 @@ type CourseRepository interface {
 	ApproveEnrollment(ctx context.Context, enrollmentID uint) error
 	RejectEnrollment(ctx context.Context, enrollmentID uint) error
 	GetPendingEnrollments(ctx context.Context) ([]models.Enrollment, error)
+	GetCourseDetails(ctx context.Context, courseID uint) (models.Course, error)
 }
 
 type UserRepository interface {
@@ -36,6 +37,7 @@ type CourseService interface {
 	GetEnrolledCourses(ctx context.Context, logger *log.Logger, username string) ([]dtos.EnrolledCoursesResponseDTO, error)
 	GetCourses(ctx context.Context, logger *log.Logger, username string, page, pageSize int) ([]dtos.CourseResponseDTO, error)
 	EnrollUser(ctx context.Context, logger *log.Logger, username string, courseID int) error
+	GetCourseByID(ctx context.Context, logger *log.Logger, courseID int) (dtos.CourseResponseDTO, error)
 }
 
 type UserService interface {
