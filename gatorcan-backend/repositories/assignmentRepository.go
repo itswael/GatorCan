@@ -16,7 +16,6 @@ type AssignmentRepository interface {
 	UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error)
 	CreateAssignmentFile(ctx context.Context, assignmentFile *models.AssignmentFile) error
 	LinkUserToAssignmentFile(ctx context.Context, userAssignmentFile *models.UserAssignmentFile) error
-	GetSubmission(ctx context.Context, course_id int, assignmentID int, userID int) (models.Submission, error)
 }
 
 type assignmentRepository struct {

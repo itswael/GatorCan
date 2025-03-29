@@ -12,7 +12,7 @@ import (
 
 type SubmissionRepository interface {
 	GradeSubmission(ctx context.Context, assignmentID uint, courseID uint, userID uint, grade float64, feedback string) error
-	GetSubmission(ctx context.Context, courseID int, assignmentID int, userID int) (models.Submission, error)
+	GetSubmission(ctx context.Context, courseID int, assignmentID int, userID uint) (models.Submission, error)
 }
 
 type submissionRepository struct {
@@ -51,7 +51,7 @@ func (s *submissionRepository) GradeSubmission(ctx context.Context, assignmentID
 }
 
 // getsubmission
-func (s *submissionRepository) GetSubmission(ctx context.Context, course_id int, assignmentID int, userID int) (models.Submission, error) {
+func (s *submissionRepository) GetSubmission(ctx context.Context, course_id int, assignmentID int, userID uint) (models.Submission, error) {
 	submission := models.Submission{}
 	if err := s.db.WithContext(ctx).
 		Where("assignment_id = ? AND course_id = ? AND user_id = ?", assignmentID, course_id, userID).
