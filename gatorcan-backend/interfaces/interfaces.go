@@ -65,14 +65,14 @@ type AssignmentService interface {
 	GetAssignmentsByCourseID(ctx context.Context, courseID int) ([]dtos.AssignmentResponseDTO, error)
 	GetAssignmentByIDAndCourseID(ctx context.Context, assignmentID int, courseID int) (dtos.AssignmentResponseDTO, error)
 	UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error)
-	GetSubmission(ctx context.Context, courseID int, assignmentID int, userID int) (dtos.SubmissionResponseDTO, error)
 }
 
 type SubmissionRepository interface {
 	GradeSubmission(ctx context.Context, assignmentID uint, courseID uint, userID uint, grade float64, feedback string) error
-	GetSubmission(ctx context.Context, courseID int, assignmentID int, userID int) (models.Submission, error)
+	GetSubmission(ctx context.Context, courseID int, assignmentID int, userID uint) (models.Submission, error)
 }
 
 type SubmissionService interface {
 	GradeSubmission(ctx context.Context, logger *log.Logger, username string, submissionData *dtos.GradeSubmissionRequestDTO) (*dtos.GradeSubmissionResponseDTO, error)
+	GetSubmission(ctx context.Context, courseID int, assignmentID int, userID uint) (dtos.SubmissionResponseDTO, error)
 }
