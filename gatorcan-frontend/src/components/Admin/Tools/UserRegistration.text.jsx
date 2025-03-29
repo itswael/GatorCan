@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import UserRegistration from "./UserRegistration";
-import addUser from "../services/AdminService";
+import addUser from "../../../services/AdminService";
 import "@testing-library/jest-dom";
 
 jest.mock("../services/AdminService");

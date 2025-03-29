@@ -8,6 +8,8 @@ import MarkUnreadChatAltIcon from "@mui/icons-material/MarkUnreadChatAlt";
 import FolderCopyIcon from "@mui/icons-material/FolderCopy";
 import { Container } from "@mui/material";
 import StudentNavbar from "./StudentNavbar";
+import CourseService from "../../services/CourseService";
+import { useState, useEffect } from "react";
 
 import React from 'react'
 
@@ -31,23 +33,21 @@ function MediaCard({text1, text2, color}) {
 
 function StudentDashboard() {
 
-  const courses = [
-    [
-      "CAP5771 - Intro to Data Science",
-      "CAP5771 - Intro to Data Science CAP5771 Spring 2025",
-      "forestgreen",
-    ],
-    [
-      "CEN5035 - Software Engineering",
-      "CEN5035 - Software Engineering CEN5035 Spring 2025",
-      "darkorchid",
-    ],
-    [
-      "COP5556 - Program Language Principles",
-      "COP5556 - Program Language Principles COP5556 Spring 2025",
-      "MediumVioletRed",
-    ],
-  ];
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [loadingEnrolledCourses, setLoadingEnrolledCourses] = useState(true);
+
+  const loadEnrolledCourses = async () => {
+    setLoadingEnrolledCourses(true);
+    const courses = await CourseService.fetchEnrolledCourses();
+    setEnrolledCourses(courses);
+    setLoadingEnrolledCourses(false);
+  };
+
+  useEffect(() => {
+    loadEnrolledCourses();
+  }, []);
+
+  const colors = ["forestgreen", "darkorchid", "MediumVioletRed"];
 
   return (
     <>
@@ -66,16 +66,22 @@ function StudentDashboard() {
             width: "80%",
           }}
         >
-          {courses.map((course, index) => {
-            return (
-              <MediaCard
-                key={index}
-                text1={course[0]}
-                text2={course[1]}
-                color={course[2]}
-              ></MediaCard>
-            );
-          })}
+          {loadingEnrolledCourses ? (
+            <p>Loading enrolled courses...</p>
+          ) : enrolledCourses.length == 0 ? (
+            <p>No enrolled courses</p>
+          ) : (
+            enrolledCourses.map((course, index) => {
+              return (
+                <MediaCard
+                  key={course.id}
+                  text1={course.name}
+                  text2={course.description}
+                  color={colors[index % colors.length]}
+                ></MediaCard>
+              );
+            })
+          )}
         </div>
       </div>
     </>

@@ -65,8 +65,33 @@ export const enrollInCourse = async (courseID) => {
   }
 };
 
+// fetch current course
+// export const fetchCourse = async ({id}) => {
+//   try {
+//     const response = await axios.get(`${base_url}/${id}`, {
+//       headers: getAuthHeader(),
+//     });
+
+//     if (response.data === null) return [];
+
+//     return response.data.map((course) => ({
+//       id: course.ID,
+//       name: course.Name,
+//       description: course.Description,
+//       created_at: course.StartDate,
+//       updated_at: course.EndDate,
+//       instructorName: course.InstructorName,
+//       instructorEmail: course.InstructorEmail,
+//     }));
+//   } catch (error) {
+//     console.error("Error fetching enrolled courses:", error);
+//     return [];
+//   }
+// };
+
 export default {
   fetchAllCourses,
   fetchEnrolledCourses,
   enrollInCourse,
+  // fetchCourse,
 };

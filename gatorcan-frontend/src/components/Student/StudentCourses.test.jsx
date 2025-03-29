@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import StudentCourses from "./StudentCourses";
-import CourseService from "../services/CourseService";
+import CourseService from "../../services/CourseService";
 import "@testing-library/jest-dom";
 
 jest.mock("../services/CourseService"); // Mock API calls
