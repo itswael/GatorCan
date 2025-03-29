@@ -110,7 +110,7 @@ function MyListItem({ icon, name, path, handleNavigate }) {
                     <ListItem
                       button
                       key={index}
-                      onClick={() => handleNavigate(`/course/${course.id}`)}
+                      onClick={() => handleNavigate(`/student-course/${course.id}`)}
                     >
                       <ListItemText
                         primary={course.name}
