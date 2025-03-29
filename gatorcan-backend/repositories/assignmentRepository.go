@@ -12,7 +12,7 @@ import (
 )
 
 type AssignmentRepository interface {
-	GetAssignmentsByCourseID(courseID int) ([]models.Assignment, error)
+	GetAssignmentsByCourseID(ctx context.Context, courseID int) ([]models.Assignment, error)
 	GetAssignmentByIDAndCourseID(ctx context.Context, assignmentID int, courseID int) (models.Assignment, error)
 	UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error)
 }
@@ -38,9 +38,9 @@ func (a *assignmentRepository) GetAssignmentByIDAndCourseID(ctx context.Context,
 }
 
 // GetAssignmentsByCourseID implements AssignmentRepository.
-func (a *assignmentRepository) GetAssignmentsByCourseID(courseID int) ([]models.Assignment, error) {
+func (a *assignmentRepository) GetAssignmentsByCourseID(ctx context.Context, courseID int) ([]models.Assignment, error) {
 	assignments := []models.Assignment{}
-	if err := a.db.Where("active_course_id = ?", courseID).Find(&assignments).Error; err != nil {
+	if err := a.db.WithContext(ctx).Where("active_course_id = ?", courseID).Find(&assignments).Error; err != nil {
 		return nil, errors.ErrAssignmentNotFound
 	}
 	return assignments, nil
