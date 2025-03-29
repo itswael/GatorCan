@@ -1,6 +1,8 @@
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 
+import { useRef, useState, useEffect } from "react";
+
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
@@ -23,6 +25,10 @@ import PersonSearchOutlinedIcon from "@mui/icons-material/PersonSearchOutlined";
 import ContentPasteSearchOutlinedIcon from "@mui/icons-material/ContentPasteSearchOutlined";
 import QueryStatsOutlinedIcon from "@mui/icons-material/QueryStatsOutlined";
 
+import UserRegistration from "./Admin/Tools/UserRegistration";
+import UserDeletion from "./Admin/Tools/UserDeletion";
+import UserRolesUpdation from "./Admin/Tools/UserRolesUpdation";
+
 import {
   Card,
   CardActionArea,
@@ -33,6 +39,8 @@ const settings = ["Profile", "Logout"];
 
 function AdminDashboard() {
   const navigate = useNavigate();
+
+  const [currPage, setCurrPage] = useState(-1);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -49,12 +57,12 @@ function AdminDashboard() {
     setAnchorElUser(null);
   };
 
-  const addUser = () => {
-    navigate("/user-registration");
-  }
+  // const addUser = () => {
+  //  navigate("/user-registration");
+  // }
 
   const tools = [
-    [<PersonAddOutlinedIcon />, "LightSalmon", "Add User", addUser],
+    [<PersonAddOutlinedIcon />, "LightSalmon", "Add User"],
     [<PersonRemoveOutlinedIcon />, "LightPink", "Delete User"],
     [<BorderColorOutlinedIcon />, "Salmon", "Edit User"],
     [<CollectionsBookmarkOutlinedIcon />, "Coral", "Add Course"],
@@ -136,46 +144,52 @@ function AdminDashboard() {
         alignItems="center"
         minHeight="100vh"
       >
-        {/* Fully centered layout */}
-        <Grid container spacing={5} maxWidth={600}>
-          {" "}
-          {/* Adjusted max width to center grid tightly */}
-          {tools.map((_, index) => (
-            <Grid
-              item
-              key={index}
-              xs={4}
-              display="flex"
-              justifyContent="center"
-            >
-              {" "}
-              {/* Ensuring 3 cards per row */}
-              <Card
-                sx={{
-                  width: 120,
-                  height: 120,
-                  backgroundColor: tools[index][1],
-                }}
-                onClick={tools[index][3]}
+        {currPage == 1 ? (
+          <UserRegistration setCurrPage={setCurrPage} />
+        ) : currPage == 2 ? (
+          <UserDeletion setCurrPage={setCurrPage} />
+        ) : currPage == 3 ? (
+          <UserRolesUpdation setCurrPage={setCurrPage} />
+        ) : (
+          <Grid container spacing={5} maxWidth={600}>
+            {tools.map((_, index) => (
+              <Grid
+                item
+                key={index}
+                xs={4}
+                display="flex"
+                justifyContent="center"
               >
-                <CardActionArea sx={{ height: "100%" }}>
-                  <CardContent
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      height: "100%",
-                    }}
-                  >
-                    {tools[index][0]}
-                    <Typography variant="caption">{tools[index][2]}</Typography>
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+                {" "}
+                <Card
+                  sx={{
+                    width: 120,
+                    height: 120,
+                    backgroundColor: tools[index][1],
+                  }}
+                  onClick={() => setCurrPage(index + 1)}
+                >
+                  <CardActionArea sx={{ height: "100%" }}>
+                    <CardContent
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100%",
+                      }}
+                    >
+                      {tools[index][0]}
+                      <Typography variant="caption">
+                        {tools[index][2]}
+                      </Typography>
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
+        )}
       </Box>
     </div>
   );
