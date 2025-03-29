@@ -33,7 +33,6 @@ func (a *assignmentRepository) GetAssignmentByIDAndCourseID(ctx context.Context,
 		First(&assignment).Error; err != nil {
 		return models.Assignment{}, errors.ErrAssignmentNotFound
 	}
-	fmt.Println(assignment)
 	return assignment, nil
 }
 
