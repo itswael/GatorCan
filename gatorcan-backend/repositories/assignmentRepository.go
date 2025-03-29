@@ -39,7 +39,11 @@ func (a *assignmentRepository) GetAssignmentByIDAndCourseID(ctx context.Context,
 
 // GetAssignmentsByCourseID implements AssignmentRepository.
 func (a *assignmentRepository) GetAssignmentsByCourseID(courseID int) ([]models.Assignment, error) {
-	panic("unimplemented")
+	assignments := []models.Assignment{}
+	if err := a.db.Where("active_course_id = ?", courseID).Find(&assignments).Error; err != nil {
+		return nil, errors.ErrAssignmentNotFound
+	}
+	return assignments, nil
 }
 
 func (a *assignmentRepository) UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error) {
