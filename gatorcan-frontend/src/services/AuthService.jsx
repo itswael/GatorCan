@@ -1,7 +1,7 @@
 import axios from "axios";
 import {jwtDecode} from "jwt-decode";
 
-const base_url = "/";
+const base_url = "http://localhost:8080/";
 
 export const login = async (username, password) => {
   const login_url = base_url + "login";
