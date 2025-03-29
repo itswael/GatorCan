@@ -102,10 +102,6 @@ func (ac *AssignmentController) GradeAssignment(c *gin.Context) {
 	panic("implement me")
 }
 
-func (ac *AssignmentController) GetSubmission(c *gin.Context) {
-	panic("implement me")
-}
-
 func (ac *AssignmentController) UploadFileToAssignment(c *gin.Context) {
 	ac.logger.Printf("Request: %s %s", c.Request.Method, c.Request.URL.Path)
 

@@ -2,12 +2,11 @@ package dtos
 
 // SubmissionResponseDTO represents the response structure for a submission.
 type SubmissionResponseDTO struct {
-	ID           uint   `json:"id"`
-	AssignmentID uint   `json:"assignment_id"`
-	CourseID     uint   `json:"course_id"`
-	UploaderID   uint   `json:"uploader_id"`
-	Grade        int    `json:"grade"`
-	Feedback     string `json:"feedback"`
+	Grade       int    `json:"grade"`
+	Feedback    string `json:"feedback"`
+	MaxPoints   int    `json:"max_points"`
+	SubmittedAt string `json:"submitted_at"`
+	FileURL     string `json:"file_url"`
 }
 
 // SubmissionRequestDTO represents the request structure for a submission.

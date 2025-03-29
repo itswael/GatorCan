@@ -13,12 +13,13 @@ type SubmissionServiceImpl struct {
 	submissionRepo interfaces.SubmissionRepository
 	userRepo       interfaces.UserRepository
 	courseRepo     interfaces.CourseRepository
+	assignmentRepo interfaces.AssignmentRepository
 	config         *config.AppConfig
 	httpClient     interfaces.HTTPClient
 }
 
-func NewSubmissionService(submissionRepo interfaces.SubmissionRepository, userRepo interfaces.UserRepository, courseRepo interfaces.CourseRepository, config *config.AppConfig, httpClient interfaces.HTTPClient) interfaces.SubmissionService {
-	return &SubmissionServiceImpl{submissionRepo: submissionRepo, userRepo: userRepo, courseRepo: courseRepo, config: config, httpClient: httpClient}
+func NewSubmissionService(submissionRepo interfaces.SubmissionRepository, assignmentRepo interfaces.AssignmentRepository, userRepo interfaces.UserRepository, courseRepo interfaces.CourseRepository, config *config.AppConfig, httpClient interfaces.HTTPClient) interfaces.SubmissionService {
+	return &SubmissionServiceImpl{submissionRepo: submissionRepo, assignmentRepo: assignmentRepo, userRepo: userRepo, courseRepo: courseRepo, config: config, httpClient: httpClient}
 }
 
 func (s *SubmissionServiceImpl) GradeSubmission(ctx context.Context, logger *log.Logger, username string, submissionData *dtos.GradeSubmissionRequestDTO) (*dtos.GradeSubmissionResponseDTO, error) {
@@ -51,5 +52,27 @@ func (s *SubmissionServiceImpl) GradeSubmission(ctx context.Context, logger *log
 		Feedback:     submissionData.Feedback,
 	}
 
+	return response, nil
+}
+
+func (s *SubmissionServiceImpl) GetSubmission(ctx context.Context, courseID int, assignmentID int, userID uint) (dtos.SubmissionResponseDTO, error) {
+	submission, err := s.submissionRepo.GetSubmission(ctx, courseID, assignmentID, userID)
+	if err != nil {
+		return dtos.SubmissionResponseDTO{}, errors.ErrSubmissionNotFound
+	}
+
+	//find max point for assignment
+	assignment, err := s.assignmentRepo.GetAssignmentByIDAndCourseID(ctx, assignmentID, courseID)
+	if err != nil {
+		return dtos.SubmissionResponseDTO{}, errors.ErrAssignmentNotFound
+	}
+
+	response := dtos.SubmissionResponseDTO{
+		FileURL:     submission.File_url,
+		Grade:       submission.Grade,
+		Feedback:    submission.Feedback,
+		SubmittedAt: submission.Updated_at.Format("2006-01-02 15:04:05"),
+		MaxPoints:   assignment.MaxPoints,
+	}
 	return response, nil
 }
