@@ -100,7 +100,33 @@ func (cc *CourseController) GetCourses(c *gin.Context) {
 }
 
 func (cc *CourseController) GetCourse(c *gin.Context) {
-	panic("unimplemented")
+	cc.logger.Printf("Request: %s %s", c.Request.Method, c.Request.URL.Path)
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	// Extract courseID from URL parameters
+	courseIDParam := c.Param("cid")
+	courseID, err := strconv.Atoi(courseIDParam)
+	if err != nil {
+		cc.logger.Printf("Invalid course ID: %s", courseIDParam)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course ID"})
+		return
+	}
+
+	// Call the service layer to fetch courses
+	course, err := cc.courseService.GetCourseByID(ctx, cc.logger, courseID)
+	if err == errors.ErrCourseNotFound {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
+		return
+	} else if err != nil {
+		cc.logger.Printf("Failed to fetch course with ID %d: %v", courseID, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch course"})
+		return
+	}
+
+	// Return course
+	c.JSON(http.StatusOK, course)
 }
 
 func (cc *CourseController) EnrollInCourse(c *gin.Context) {
