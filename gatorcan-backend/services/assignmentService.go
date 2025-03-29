@@ -22,7 +22,22 @@ func NewAssignmentService(assignmentRepo interfaces.AssignmentRepository, userRe
 }
 
 func (s *AssignmentService) GetAssignmentsByCourseID(ctx context.Context, courseID int) ([]dtos.AssignmentResponseDTO, error) {
-	panic("not implemented")
+	assignments, err := s.assignmentRepo.GetAssignmentsByCourseID(ctx, courseID)
+	if err != nil {
+		return nil, errors.ErrAssignmentNotFound
+	}
+	assignmentsResponse := make([]dtos.AssignmentResponseDTO, len(assignments))
+	for i, assignment := range assignments {
+		assignmentsResponse[i] = dtos.AssignmentResponseDTO{
+			ID:             assignment.ID,
+			Title:          assignment.Title,
+			Description:    assignment.Description,
+			Deadline:       assignment.Deadline,
+			ActiveCourseID: assignment.ActiveCourseID,
+			MaxPoints:      assignment.MaxPoints,
+		}
+	}
+	return assignmentsResponse, nil
 }
 func (s *AssignmentService) GetAssignmentByIDAndCourseID(ctx context.Context, assignmentID int, courseID int) (dtos.AssignmentResponseDTO, error) {
 	assignment, err := s.assignmentRepo.GetAssignmentByIDAndCourseID(ctx, assignmentID, courseID)
