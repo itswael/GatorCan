@@ -14,4 +14,5 @@ var (
 	ErrSubmissionAlreadyExists = errors.New("submission already exists")
 	ErrFileNotFound            = errors.New("file not found for the assignment")
 	ErrFailedToLinkFileToUser  = errors.New("failed to link file to user")
+	ErrGradingSubmissionFailed = errors.New("failed to grade submission")
 )

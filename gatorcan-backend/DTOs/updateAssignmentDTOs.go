@@ -1,6 +1,9 @@
 package dtos
 
-import "time"
+import (
+	"gatorcan-backend/models"
+	"time"
+)
 
 type UploadFileToAssignmentDTO struct {
 	AssignmentID uint   `json:"assignment_id" binding:"required"`
@@ -32,4 +35,16 @@ type GradeAssignmentDTO struct {
 	UserID       uint    `json:"user_id" binding:"required"`
 	Grade        float64 `json:"grade" binding:"required"`
 	Feedback     string  `json:"feedback" binding:"required"`
+}
+
+func NewUploadFileToAssignmentResponseDTO(file *models.AssignmentFile, uploaderID uint, courseID uint) *UploadFileToAssignmentResponseDTO {
+	return &UploadFileToAssignmentResponseDTO{
+		AssignmentID: file.AssignmentID,
+		FileName:     file.FileName,
+		FileURL:      file.FileURL,
+		FileType:     file.FileType,
+		UploadedAt:   file.CreatedAt,
+		UploaderID:   uploaderID,
+		CourseID:     courseID,
+	}
 }

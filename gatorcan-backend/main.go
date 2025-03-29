@@ -59,6 +59,7 @@ func main() {
 	courseRepo := repositories.NewCourseRepository(db)
 	roleRepo := repositories.NewRoleRepository(db)
 	assignmentRepo := repositories.NewAssignmentRepository(db)
+	submissionRepo := repositories.NewSubmissionRepository(db)
 
 	// Initialize HTTP client with sensible defaults
 	httpClient := &http.Client{
@@ -74,11 +75,13 @@ func main() {
 	userService := services.NewUserService(courseRepo, userRepo, roleRepo, appConfig, httpClient)
 	courseService := services.NewCourseService(courseRepo, userRepo, appConfig, httpClient)
 	assignmentService := services.NewAssignmentService(assignmentRepo, userRepo, courseRepo, appConfig, httpClient)
+	submissionService := services.NewSubmissionService(submissionRepo, userRepo, courseRepo, appConfig, httpClient)
 
 	// Initialize controllers
 	userController := controllers.NewUserController(userService, logger)
 	courseController := controllers.NewCourseController(courseService, logger)
 	assignmentController := controllers.NewAssignmentController(assignmentService, logger)
+	submissionController := controllers.NewSubmissionController(submissionService, logger)
 
 	// Set up router
 	router := gin.Default()
@@ -88,6 +91,7 @@ func main() {
 		userController,
 		courseController,
 		assignmentController,
+		submissionController,
 		router,
 		logger)
 

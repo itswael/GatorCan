@@ -6,6 +6,7 @@ import (
 	"gatorcan-backend/config"
 	"gatorcan-backend/errors"
 	"gatorcan-backend/interfaces"
+	"gatorcan-backend/models"
 	"log"
 )
 
@@ -63,7 +64,7 @@ func (s *AssignmentService) GetAssignmentByIDAndCourseID(ctx context.Context, as
 }
 
 func (s *AssignmentService) UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error) {
-	_, err := s.userRepo.GetUserByUsername(ctx, username)
+	user, err := s.userRepo.GetUserByUsername(ctx, username)
 	if err != nil {
 		logger.Printf("user not found: %s %d", username, 404)
 		return nil, errors.ErrUserNotFound
@@ -76,24 +77,38 @@ func (s *AssignmentService) UploadFileToAssignment(ctx context.Context, logger *
 
 	//To do: Implement "GetAssignmentByIDAndCourseID" method in the assignment repository.
 
-	// _, err = s.assignmentRepo.GetAssignmentByIDAndCourseID(ctx, int(uploadData.AssignmentID), int(uploadData.CourseID))
-	// if err != nil {
-	// 	logger.Printf("assignment not found: %d %d", uploadData.AssignmentID, 404)
-	// 	return nil, errors.ErrAssignmentNotFound
-	// }
+	_, err = s.assignmentRepo.GetAssignmentByIDAndCourseID(ctx, int(uploadData.AssignmentID), int(uploadData.CourseID))
+	if err != nil {
+		logger.Printf("assignment not found: %d %d", uploadData.AssignmentID, 404)
+		return nil, errors.ErrAssignmentNotFound
+	}
 
 	// Call the repository to handle the database logic
-	uploadResponse, err := s.assignmentRepo.UploadFileToAssignment(ctx, logger, username, &dtos.UploadFileToAssignmentDTO{
+	assignmentFile := models.AssignmentFile{
 		AssignmentID: uploadData.AssignmentID,
-		CourseID:     uploadData.CourseID,
 		FileName:     uploadData.FileName,
 		FileURL:      uploadData.FileURL,
 		FileType:     uploadData.FileType,
-	})
-	if err != nil {
-		logger.Printf("error uploading file to assignment: %v", err)
-		return nil, err
 	}
 
-	return uploadResponse, nil
+	if err := s.assignmentRepo.CreateAssignmentFile(ctx, &assignmentFile); err != nil {
+		logger.Printf("Error uploading file to assignment: %v", err)
+		return nil, errors.ErrFailedToUploadFile
+	}
+
+	// Link user to the uploaded file
+	userAssignmentFile := models.UserAssignmentFile{
+		UserID:           user.ID,
+		AssignmentFileID: assignmentFile.ID,
+	}
+
+	if err := s.assignmentRepo.LinkUserToAssignmentFile(ctx, &userAssignmentFile); err != nil {
+		logger.Printf("Error linking file to user: %v", err)
+		return nil, errors.ErrFailedToLinkFileToUser
+	}
+
+	// Convert to response DTO
+	response := dtos.NewUploadFileToAssignmentResponseDTO(&assignmentFile, user.ID, uploadData.CourseID)
+
+	return response, nil
 }
