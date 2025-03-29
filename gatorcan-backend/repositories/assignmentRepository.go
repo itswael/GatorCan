@@ -16,6 +16,7 @@ type AssignmentRepository interface {
 	UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error)
 	CreateAssignmentFile(ctx context.Context, assignmentFile *models.AssignmentFile) error
 	LinkUserToAssignmentFile(ctx context.Context, userAssignmentFile *models.UserAssignmentFile) error
+	GetSubmission(ctx context.Context, course_id int, assignmentID int, userID int) (models.Submission, error)
 }
 
 type assignmentRepository struct {
@@ -44,17 +45,6 @@ func (a *assignmentRepository) GetAssignmentsByCourseID(ctx context.Context, cou
 		return nil, errors.ErrAssignmentNotFound
 	}
 	return assignments, nil
-}
-
-// getsubmission
-func (a *assignmentRepository) GetSubmission(ctx context.Context, course_id int, assignmentID int, userID int) (models.Submission, error) {
-	submission := models.Submission{}
-	if err := a.db.WithContext(ctx).
-		Where("assignment_id = ? AND course_id = ? AND user_id = ?", assignmentID, course_id, userID).
-		First(&submission).Error; err != nil {
-		return models.Submission{}, errors.ErrSubmissionNotFound
-	}
-	return submission, nil
 }
 
 func (a *assignmentRepository) UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error) {
