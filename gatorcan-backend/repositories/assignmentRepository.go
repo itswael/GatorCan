@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 	dtos "gatorcan-backend/DTOs"
 	"gatorcan-backend/errors"
 	"gatorcan-backend/models"
@@ -26,7 +27,14 @@ func NewAssignmentRepository(db *gorm.DB) AssignmentRepository {
 
 // GetAssignmentByIDAndCourseID implements AssignmentRepository.
 func (a *assignmentRepository) GetAssignmentByIDAndCourseID(ctx context.Context, assignmentID int, courseID int) (models.Assignment, error) {
-	panic("unimplemented")
+	assignment := models.Assignment{}
+	if err := a.db.WithContext(ctx).
+		Where("id = ? AND active_course_id = ?", assignmentID, courseID).
+		First(&assignment).Error; err != nil {
+		return models.Assignment{}, errors.ErrAssignmentNotFound
+	}
+	fmt.Println(assignment)
+	return assignment, nil
 }
 
 // GetAssignmentsByCourseID implements AssignmentRepository.
