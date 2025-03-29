@@ -55,6 +55,8 @@ type AssignmentRepository interface {
 	GetAssignmentsByCourseID(ctx context.Context, courseID int) ([]models.Assignment, error)
 	GetAssignmentByIDAndCourseID(ctx context.Context, assignmentID int, courseID int) (models.Assignment, error)
 	UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error)
+	CreateAssignmentFile(ctx context.Context, assignmentFile *models.AssignmentFile) error
+	LinkUserToAssignmentFile(ctx context.Context, userAssignmentFile *models.UserAssignmentFile) error
 }
 
 type AssignmentService interface {

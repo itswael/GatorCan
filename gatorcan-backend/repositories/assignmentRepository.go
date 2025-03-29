@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"context"
-	"fmt"
 	dtos "gatorcan-backend/DTOs"
 	"gatorcan-backend/errors"
 	"gatorcan-backend/models"
@@ -15,6 +14,8 @@ type AssignmentRepository interface {
 	GetAssignmentsByCourseID(ctx context.Context, courseID int) ([]models.Assignment, error)
 	GetAssignmentByIDAndCourseID(ctx context.Context, assignmentID int, courseID int) (models.Assignment, error)
 	UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error)
+	CreateAssignmentFile(ctx context.Context, assignmentFile *models.AssignmentFile) error
+	LinkUserToAssignmentFile(ctx context.Context, userAssignmentFile *models.UserAssignmentFile) error
 }
 
 type assignmentRepository struct {
@@ -90,4 +91,18 @@ func (a *assignmentRepository) UploadFileToAssignment(ctx context.Context, logge
 	}
 
 	return response, nil
+}
+
+func (a *assignmentRepository) CreateAssignmentFile(ctx context.Context, assignmentFile *models.AssignmentFile) error {
+	if err := a.db.WithContext(ctx).Create(assignmentFile).Error; err != nil {
+		return errors.ErrFailedToUploadFile
+	}
+	return nil
+}
+
+func (a *assignmentRepository) LinkUserToAssignmentFile(ctx context.Context, userAssignmentFile *models.UserAssignmentFile) error {
+	if err := a.db.WithContext(ctx).Create(userAssignmentFile).Error; err != nil {
+		return errors.ErrFailedToLinkFileToUser
+	}
+	return nil
 }
