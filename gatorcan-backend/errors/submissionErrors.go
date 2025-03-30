@@ -14,4 +14,5 @@ var (
 	ErrInvalidGradeSubmissionID            = errors.New("invalid grade submission ID")
 	ErrFileNotFoundForGradeSubmission      = errors.New("file not found for the grade submission")
 	ErrFailedToLinkFileToGradeSubmission   = errors.New("failed to link file to grade submission")
+	ErrGrading                             = errors.New("grading error")
 )

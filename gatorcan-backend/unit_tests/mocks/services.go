@@ -35,6 +35,11 @@ func (m *MockCourseService) EnrollUser(ctx context.Context, logger *log.Logger, 
 	return args.Error(0)
 }
 
+func (m *MockCourseService) GetCourseByID(ctx context.Context, logger *log.Logger, courseID int) (dtos.CourseResponseDTO, error) {
+	args := m.Called(ctx, courseID)
+	return args.Get(0).(dtos.CourseResponseDTO), args.Error(1)
+}
+
 // MockUserService mocks the user service interface
 type MockUserService struct {
 	mock.Mock
@@ -77,4 +82,53 @@ func (m *MockUserService) UpdateUser(ctx context.Context, username string, updat
 func (m *MockUserService) UpdateRoles(ctx context.Context, username string, roles []string) error {
 	args := m.Called(ctx, username, roles)
 	return args.Error(0)
+}
+
+// MockAssignmentService mocks the AssignmentService interface
+type MockAssignmentService struct {
+	mock.Mock
+}
+
+func (m *MockAssignmentService) GetAssignmentsByCourseID(ctx context.Context, courseID int) ([]dtos.AssignmentResponseDTO, error) {
+	args := m.Called(ctx, courseID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]dtos.AssignmentResponseDTO), args.Error(1)
+}
+
+func (m *MockAssignmentService) GetAssignmentByIDAndCourseID(ctx context.Context, assignmentID, courseID int) (dtos.AssignmentResponseDTO, error) {
+	args := m.Called(ctx, assignmentID, courseID)
+	return args.Get(0).(dtos.AssignmentResponseDTO), args.Error(1)
+}
+
+func (m *MockAssignmentService) UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error) {
+	args := m.Called(ctx, logger, username, uploadData)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dtos.UploadFileToAssignmentResponseDTO), args.Error(1)
+}
+
+// Add this to your existing services.go file after the MockAssignmentService:
+
+// MockSubmissionService mocks the SubmissionService interface
+type MockSubmissionService struct {
+	mock.Mock
+}
+
+func (m *MockSubmissionService) GetSubmission(ctx context.Context, courseID, assignmentID int, userID uint) (*dtos.SubmissionResponseDTO, error) {
+	args := m.Called(ctx, courseID, assignmentID, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dtos.SubmissionResponseDTO), args.Error(1)
+}
+
+func (m *MockSubmissionService) GradeSubmission(ctx context.Context, logger *log.Logger, instructorUsername string, gradeData *dtos.GradeSubmissionRequestDTO) (*dtos.GradeSubmissionResponseDTO, error) {
+	args := m.Called(ctx, logger, instructorUsername, gradeData)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dtos.GradeSubmissionResponseDTO), args.Error(1)
 }
