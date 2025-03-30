@@ -191,3 +191,21 @@ func (m *MockAssignmentRepository) UploadFileToAssignment(ctx context.Context, l
 	}
 	return args.Get(0).(*dtos.UploadFileToAssignmentResponseDTO), args.Error(1)
 }
+
+// MockSubmissionRepository mocks the SubmissionRepository interface
+type MockSubmissionRepository struct {
+	mock.Mock
+}
+
+func (m *MockSubmissionRepository) GetSubmission(ctx context.Context, courseID, assignmentID int, userID uint) (*models.Submission, error) {
+	args := m.Called(ctx, courseID, assignmentID, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Submission), args.Error(1)
+}
+
+func (m *MockSubmissionRepository) GradeSubmission(ctx context.Context, assignmentID uint, courseID uint, userID uint, grade float64, feedback string) error {
+	args := m.Called(ctx, assignmentID, courseID, userID, grade, feedback)
+	return args.Error(0)
+}
