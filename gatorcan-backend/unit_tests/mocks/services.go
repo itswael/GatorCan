@@ -35,6 +35,11 @@ func (m *MockCourseService) EnrollUser(ctx context.Context, logger *log.Logger, 
 	return args.Error(0)
 }
 
+func (m *MockCourseService) GetCourseByID(ctx context.Context, logger *log.Logger, courseID int) (dtos.CourseResponseDTO, error) {
+	args := m.Called(ctx, courseID)
+	return args.Get(0).(dtos.CourseResponseDTO), args.Error(1)
+}
+
 // MockUserService mocks the user service interface
 type MockUserService struct {
 	mock.Mock
