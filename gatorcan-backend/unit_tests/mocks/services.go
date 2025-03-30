@@ -83,3 +83,29 @@ func (m *MockUserService) UpdateRoles(ctx context.Context, username string, role
 	args := m.Called(ctx, username, roles)
 	return args.Error(0)
 }
+
+// MockAssignmentService mocks the AssignmentService interface
+type MockAssignmentService struct {
+	mock.Mock
+}
+
+func (m *MockAssignmentService) GetAssignmentsByCourseID(ctx context.Context, courseID int) ([]dtos.AssignmentResponseDTO, error) {
+	args := m.Called(ctx, courseID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]dtos.AssignmentResponseDTO), args.Error(1)
+}
+
+func (m *MockAssignmentService) GetAssignmentByIDAndCourseID(ctx context.Context, assignmentID, courseID int) (dtos.AssignmentResponseDTO, error) {
+	args := m.Called(ctx, assignmentID, courseID)
+	return args.Get(0).(dtos.AssignmentResponseDTO), args.Error(1)
+}
+
+func (m *MockAssignmentService) UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error) {
+	args := m.Called(ctx, logger, username, uploadData)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dtos.UploadFileToAssignmentResponseDTO), args.Error(1)
+}
