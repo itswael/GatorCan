@@ -67,6 +67,11 @@ func (m *MockCourseRepository) GetPendingEnrollments(ctx context.Context) ([]mod
 	return args.Get(0).([]models.Enrollment), args.Error(1)
 }
 
+func (m *MockCourseRepository) GetCourseDetails(ctx context.Context, courseID uint) (models.Course, error) {
+	args := m.Called(ctx, courseID)
+	return args.Get(0).(models.Course), args.Error(1)
+}
+
 // MockUserRepository mocks the user repository
 type MockUserRepository struct {
 	mock.Mock
