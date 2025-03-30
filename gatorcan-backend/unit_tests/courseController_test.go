@@ -145,7 +145,7 @@ func TestGetCourses(t *testing.T) {
 					Return(courses, nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody:   `[{"created_at": "0001-01-01T00:00:00Z","id":1,"name":"Test Course","description":"Test Description","updated_at": "0001-01-01T00:00:00Z"}]`,
+			expectedBody:   `[{"id":1,"name":"Test Course","description":"Test Description","instructorName":"","instructorEmail":""}]`,
 		},
 		{
 			name:     "Success with custom pagination",
@@ -364,6 +364,98 @@ func TestEnrollInCourse(t *testing.T) {
 
 			// Execute controller method
 			courseController.EnrollInCourse(c)
+
+			// Assert response
+			assert.Equal(t, tc.expectedStatus, w.Code)
+			if tc.expectedBody != "" {
+				assert.JSONEq(t, tc.expectedBody, w.Body.String())
+			}
+
+			// Verify all mock expectations were met
+			mockService.AssertExpectations(t)
+		})
+	}
+}
+
+func TestGetCourse(t *testing.T) {
+	// Setup
+	gin.SetMode(gin.TestMode)
+	logger := log.New(io.Discard, "", 0)
+
+	tests := []struct {
+		name           string
+		courseIDParam  string
+		setupMock      func(*mocks.MockCourseService)
+		expectedStatus int
+		expectedBody   string
+	}{
+		{
+			name:          "Success",
+			courseIDParam: "1",
+			setupMock: func(m *mocks.MockCourseService) {
+				course := dtos.CourseResponseDTO{
+					ID:              1,
+					Name:            "Test Course",
+					Description:     "Test Description",
+					InstructorName:  "Instructor",
+					InstructorEmail: "instructor@example.com",
+				}
+				m.On("GetCourseByID", mock.Anything, 1).Return(course, nil)
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody:   `{"id":1,"name":"Test Course","description":"Test Description","instructorName":"Instructor","instructorEmail":"instructor@example.com"}`,
+		},
+		{
+			name:           "Invalid Course ID",
+			courseIDParam:  "invalid",
+			setupMock:      func(m *mocks.MockCourseService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   `{"error":"Invalid course ID"}`,
+		},
+		{
+			name:          "Course Not Found",
+			courseIDParam: "999",
+			setupMock: func(m *mocks.MockCourseService) {
+				m.On("GetCourseByID", mock.Anything, 999).Return(dtos.CourseResponseDTO{}, errors.ErrCourseNotFound)
+			},
+			expectedStatus: http.StatusNotFound,
+			expectedBody:   `{"error":"Course not found"}`,
+		},
+		{
+			name:          "Database Error",
+			courseIDParam: "1",
+			setupMock: func(m *mocks.MockCourseService) {
+				m.On("GetCourseByID", mock.Anything, 1).Return(dtos.CourseResponseDTO{}, errors.ErrDatabaseError)
+			},
+			expectedStatus: http.StatusInternalServerError,
+			expectedBody:   `{"error":"Failed to fetch course"}`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Setup mock service
+			mockService := new(mocks.MockCourseService)
+			tc.setupMock(mockService)
+
+			// Create controller
+			courseController := controllers.NewCourseController(mockService, logger)
+
+			// Setup HTTP request context
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+
+			// Add course ID as URL parameter
+			c.Params = gin.Params{
+				{Key: "cid", Value: tc.courseIDParam},
+			}
+
+			// Create mock request
+			req := httptest.NewRequest("GET", "/courses/"+tc.courseIDParam, nil)
+			c.Request = req
+
+			// Execute controller method
+			courseController.GetCourse(c)
 
 			// Assert response
 			assert.Equal(t, tc.expectedStatus, w.Code)

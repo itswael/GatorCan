@@ -55,16 +55,16 @@ func (s *SubmissionServiceImpl) GradeSubmission(ctx context.Context, logger *log
 	return response, nil
 }
 
-func (s *SubmissionServiceImpl) GetSubmission(ctx context.Context, courseID int, assignmentID int, userID uint) (dtos.SubmissionResponseDTO, error) {
+func (s *SubmissionServiceImpl) GetSubmission(ctx context.Context, courseID int, assignmentID int, userID uint) (*dtos.SubmissionResponseDTO, error) {
 	submission, err := s.submissionRepo.GetSubmission(ctx, courseID, assignmentID, userID)
 	if err != nil {
-		return dtos.SubmissionResponseDTO{}, errors.ErrSubmissionNotFound
+		return &dtos.SubmissionResponseDTO{}, errors.ErrSubmissionNotFound
 	}
 
 	//find max point for assignment
 	assignment, err := s.assignmentRepo.GetAssignmentByIDAndCourseID(ctx, assignmentID, courseID)
 	if err != nil {
-		return dtos.SubmissionResponseDTO{}, errors.ErrAssignmentNotFound
+		return &dtos.SubmissionResponseDTO{}, errors.ErrAssignmentNotFound
 	}
 
 	response := dtos.SubmissionResponseDTO{
@@ -74,5 +74,5 @@ func (s *SubmissionServiceImpl) GetSubmission(ctx context.Context, courseID int,
 		SubmittedAt: submission.Updated_at.Format("2006-01-02 15:04:05"),
 		MaxPoints:   assignment.MaxPoints,
 	}
-	return response, nil
+	return &response, nil
 }

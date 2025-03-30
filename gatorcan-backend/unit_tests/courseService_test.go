@@ -462,7 +462,6 @@ func TestEnrollUser(t *testing.T) {
 	}
 }
 
-// This test is more appropriate than the original TestConvertToCourseDTO
 func TestCourseResponseDTOConversion(t *testing.T) {
 	// Create test data
 	now := time.Now()
@@ -491,12 +490,144 @@ func TestCourseResponseDTOConversion(t *testing.T) {
 	assert.Equal(t, uint(1), dtos[0].ID)
 	assert.Equal(t, "Test Course", dtos[0].Name)
 	assert.Equal(t, "Test Description", dtos[0].Description)
-	assert.Equal(t, now, dtos[0].CreatedAt)
-	assert.Equal(t, now, dtos[0].UpdatedAt)
 
 	assert.Equal(t, uint(2), dtos[1].ID)
 	assert.Equal(t, "Another Course", dtos[1].Name)
 	assert.Equal(t, "Another Description", dtos[1].Description)
-	assert.Equal(t, now, dtos[1].CreatedAt)
-	assert.Equal(t, now, dtos[1].UpdatedAt)
+}
+
+func TestGetCourseByID(t *testing.T) {
+	// Create mocks
+	mockCourseRepo := new(mocks.MockCourseRepository)
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockHTTPClient := new(mocks.MockHTTPClient)
+
+	// Create test config
+	appConfig := &config.AppConfig{
+		Environment: "test",
+	}
+
+	// Create service with mocks
+	courseService := services.NewCourseService(mockCourseRepo, mockUserRepo, appConfig, mockHTTPClient)
+
+	// Setup context and logger
+	ctx := context.Background()
+	logger := log.New(io.Discard, "", 0)
+
+	// Create test data
+	testActiveCourse := models.ActiveCourse{
+		ID:           1,
+		CourseID:     101,
+		InstructorID: 201,
+	}
+
+	testCourse := models.Course{
+		ID:          101,
+		Name:        "Test Course",
+		Description: "Test Description",
+	}
+
+	testInstructor := &models.User{
+		Username: "instructor",
+		Email:    "instructor@example.com",
+	}
+
+	tests := []struct {
+		name            string
+		courseID        int
+		activeCourse    models.ActiveCourse
+		activeCourseErr error
+		course          models.Course
+		courseErr       error
+		instructor      *models.User
+		instructorErr   error
+		expectError     bool
+		errorType       error
+	}{
+		{
+			name:            "Success",
+			courseID:        1,
+			activeCourse:    testActiveCourse,
+			activeCourseErr: nil,
+			course:          testCourse,
+			courseErr:       nil,
+			instructor:      testInstructor,
+			instructorErr:   nil,
+			expectError:     false,
+		},
+		{
+			name:            "Active Course Not Found",
+			courseID:        999,
+			activeCourse:    models.ActiveCourse{},
+			activeCourseErr: errors.New("course not found"),
+			course:          models.Course{},
+			courseErr:       nil,
+			instructor:      nil,
+			instructorErr:   nil,
+			expectError:     true,
+			errorType:       domainErrors.ErrCourseNotFound,
+		},
+		{
+			name:            "Course Details Not Found",
+			courseID:        1,
+			activeCourse:    testActiveCourse,
+			activeCourseErr: nil,
+			course:          models.Course{},
+			courseErr:       errors.New("course details not found"),
+			instructor:      nil,
+			instructorErr:   nil,
+			expectError:     true,
+			errorType:       domainErrors.ErrCourseNotFound,
+		},
+		{
+			name:            "Instructor Not Found",
+			courseID:        1,
+			activeCourse:    testActiveCourse,
+			activeCourseErr: nil,
+			course:          testCourse,
+			courseErr:       nil,
+			instructor:      nil,
+			instructorErr:   errors.New("instructor not found"),
+			expectError:     true,
+			errorType:       domainErrors.ErrUserNotFound,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Setup mock expectations based on test case
+			mockCourseRepo.On("GetCourseByID", ctx, tc.courseID).Return(tc.activeCourse, tc.activeCourseErr).Once()
+
+			// Only set up the following expectations if we expect them to be called
+			if tc.activeCourseErr == nil {
+				mockCourseRepo.On("GetCourseDetails", ctx, tc.activeCourse.CourseID).Return(tc.course, tc.courseErr).Once()
+
+				if tc.courseErr == nil {
+					mockUserRepo.On("GetUserByID", ctx, tc.activeCourse.InstructorID).Return(tc.instructor, tc.instructorErr).Once()
+				}
+			}
+
+			// Call the service
+			course, err := courseService.GetCourseByID(ctx, logger, tc.courseID)
+
+			// Assertions
+			if tc.expectError {
+				assert.Error(t, err)
+				if tc.errorType != nil {
+					assert.Equal(t, tc.errorType, err)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.course.ID, course.ID)
+				assert.Equal(t, tc.course.Name, course.Name)
+				assert.Equal(t, tc.course.Description, course.Description)
+				assert.Equal(t, tc.instructor.Username, course.InstructorName)
+				assert.Equal(t, tc.instructor.Email, course.InstructorEmail)
+			}
+
+			// Verify that mock expectations were met
+			mockCourseRepo.AssertExpectations(t)
+			mockUserRepo.AssertExpectations(t)
+		})
+	}
 }

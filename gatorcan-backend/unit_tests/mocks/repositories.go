@@ -4,6 +4,7 @@ import (
 	"context"
 	dtos "gatorcan-backend/DTOs"
 	"gatorcan-backend/models"
+	"log"
 	"net/http"
 
 	"github.com/stretchr/testify/mock"
@@ -65,6 +66,11 @@ func (m *MockCourseRepository) GetPendingEnrollments(ctx context.Context) ([]mod
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]models.Enrollment), args.Error(1)
+}
+
+func (m *MockCourseRepository) GetCourseDetails(ctx context.Context, courseID uint) (models.Course, error) {
+	args := m.Called(ctx, courseID)
+	return args.Get(0).(models.Course), args.Error(1)
 }
 
 // MockUserRepository mocks the user repository
@@ -140,4 +146,66 @@ func (m *MockHTTPClient) Do(req *http.Request) (*http.Response, error) {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*http.Response), args.Error(1)
+}
+
+// MockAssignmentRepository mocks the assignment repository
+type MockAssignmentRepository struct {
+	mock.Mock
+}
+
+func (m *MockAssignmentRepository) GetAssignmentsByCourseID(ctx context.Context, courseID int) ([]models.Assignment, error) {
+	args := m.Called(ctx, courseID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.Assignment), args.Error(1)
+}
+
+func (m *MockAssignmentRepository) GetAssignmentByIDAndCourseID(ctx context.Context, assignmentID int, courseID int) (models.Assignment, error) {
+	args := m.Called(ctx, assignmentID, courseID)
+	return args.Get(0).(models.Assignment), args.Error(1)
+}
+
+func (m *MockAssignmentRepository) CreateAssignmentFile(ctx context.Context, file *models.AssignmentFile) error {
+	args := m.Called(ctx, file)
+	// Set the ID on the file to simulate DB creation
+	if args.Error(0) == nil && file.ID == 0 {
+		file.ID = 1
+	}
+	return args.Error(0)
+}
+
+func (m *MockAssignmentRepository) LinkUserToAssignmentFile(ctx context.Context, userFile *models.UserAssignmentFile) error {
+	args := m.Called(ctx, userFile)
+	// Set the ID on the userFile to simulate DB creation
+	if args.Error(0) == nil && userFile.ID == 0 {
+		userFile.ID = 1
+	}
+	return args.Error(0)
+}
+
+func (m *MockAssignmentRepository) UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error) {
+	args := m.Called(ctx, logger, username, uploadData)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dtos.UploadFileToAssignmentResponseDTO), args.Error(1)
+}
+
+// MockSubmissionRepository mocks the SubmissionRepository interface
+type MockSubmissionRepository struct {
+	mock.Mock
+}
+
+func (m *MockSubmissionRepository) GetSubmission(ctx context.Context, courseID, assignmentID int, userID uint) (*models.Submission, error) {
+	args := m.Called(ctx, courseID, assignmentID, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.Submission), args.Error(1)
+}
+
+func (m *MockSubmissionRepository) GradeSubmission(ctx context.Context, assignmentID uint, courseID uint, userID uint, grade float64, feedback string) error {
+	args := m.Called(ctx, assignmentID, courseID, userID, grade, feedback)
+	return args.Error(0)
 }
