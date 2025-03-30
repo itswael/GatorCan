@@ -145,7 +145,7 @@ func TestGetCourses(t *testing.T) {
 					Return(courses, nil)
 			},
 			expectedStatus: http.StatusOK,
-			expectedBody:   `[{"created_at": "0001-01-01T00:00:00Z","id":1,"name":"Test Course","description":"Test Description","updated_at": "0001-01-01T00:00:00Z"}]`,
+			expectedBody:   `[{"id":1,"name":"Test Course","description":"Test Description","instructorName":"","instructorEmail":""}]`,
 		},
 		{
 			name:     "Success with custom pagination",
