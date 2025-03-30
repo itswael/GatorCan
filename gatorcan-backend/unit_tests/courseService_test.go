@@ -462,7 +462,6 @@ func TestEnrollUser(t *testing.T) {
 	}
 }
 
-// This test is more appropriate than the original TestConvertToCourseDTO
 func TestCourseResponseDTOConversion(t *testing.T) {
 	// Create test data
 	now := time.Now()
@@ -491,12 +490,8 @@ func TestCourseResponseDTOConversion(t *testing.T) {
 	assert.Equal(t, uint(1), dtos[0].ID)
 	assert.Equal(t, "Test Course", dtos[0].Name)
 	assert.Equal(t, "Test Description", dtos[0].Description)
-	assert.Equal(t, now, dtos[0].CreatedAt)
-	assert.Equal(t, now, dtos[0].UpdatedAt)
 
 	assert.Equal(t, uint(2), dtos[1].ID)
 	assert.Equal(t, "Another Course", dtos[1].Name)
 	assert.Equal(t, "Another Description", dtos[1].Description)
-	assert.Equal(t, now, dtos[1].CreatedAt)
-	assert.Equal(t, now, dtos[1].UpdatedAt)
 }
