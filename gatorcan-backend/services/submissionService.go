@@ -58,13 +58,18 @@ func (s *SubmissionServiceImpl) GradeSubmission(ctx context.Context, logger *log
 func (s *SubmissionServiceImpl) GetSubmission(ctx context.Context, courseID int, assignmentID int, userID uint) (*dtos.SubmissionResponseDTO, error) {
 	submission, err := s.submissionRepo.GetSubmission(ctx, courseID, assignmentID, userID)
 	if err != nil {
-		return &dtos.SubmissionResponseDTO{}, errors.ErrSubmissionNotFound
+		return nil, errors.ErrSubmissionNotFound
+	}
+
+	// Check if the submission is empty
+	if submission.Updated_at.Format("2006-01-02 15:04:05") == "" {
+		return nil, errors.ErrSubmissionNotFound
 	}
 
 	//find max point for assignment
 	assignment, err := s.assignmentRepo.GetAssignmentByIDAndCourseID(ctx, assignmentID, courseID)
 	if err != nil {
-		return &dtos.SubmissionResponseDTO{}, errors.ErrAssignmentNotFound
+		return nil, errors.ErrAssignmentNotFound
 	}
 
 	response := dtos.SubmissionResponseDTO{
