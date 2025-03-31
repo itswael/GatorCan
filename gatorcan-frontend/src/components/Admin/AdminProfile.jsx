@@ -94,3 +94,144 @@ export default AdminProfile;
 
 
 
+const ResetPassword = ({ setResetPwd }) => {
+  const username = localStorage.getItem("username");
+  const errRef = useRef();
+
+  const [pwd, setPwd] = useState("");
+  const [rePwd, setRePwd] = useState("");
+  const [oldPwd, setOldPwd] = useState("");
+  const [errMsg, setErrMsg] = useState("");
+
+  const [displaySuccess, setDisplaySuccess] = useState("");
+
+  const btnstyle = { backgroundColor: "#1B6DA1", margin: "20px 0" };
+  const paperStyle = {
+    padding: 20,
+    width: 400,
+    margin: "19px auto",
+  };
+  const inputStyle = { margin: "12px auto" };
+  const errorStyle = { color: "red" };
+
+  useEffect(() => {
+    setErrMsg("");
+  }, [pwd, rePwd]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    // validations
+    if (pwd != rePwd) {
+      setErrMsg("Passwords do not match");
+      return;
+    }
+
+    try {
+      const response = await resetPassword(oldPwd, pwd);
+      console.log("Login API Successful:", response);
+      let success = response["success"];
+      if (!success) {
+        console.log(response["message"]);
+        setErrMsg(response["message"]);
+      } else {
+        setDisplaySuccess("Password updated successfully");
+      }
+    } catch (error) {
+      console.log(error);
+      setErrMsg(error.response?.data?.message || "Unknown error");
+    }
+  };
+
+  return displaySuccess !== "" ? (
+    <Paper elevation={12} style={paperStyle}>
+      <Grid align="center">
+        <p>{displaySuccess}</p>
+      </Grid>
+      <Button
+        style={btnstyle}
+        color="primary"
+        variant="contained"
+        fullWidth
+        onClick={() => {
+          setResetPwd(false);
+        }}
+      >
+        DONE
+      </Button>
+    </Paper>
+  ) : (
+    <div>
+      <Grid>
+        <form onSubmit={handleSubmit}>
+          <Paper elevation={12} style={paperStyle}>
+            <Grid align="center">
+              <h2 data-testid="cypress-title">Reset Password</h2>
+            </Grid>
+            <Input
+              type="text"
+              id="username"
+              autoComplete="off"
+              value={username}
+              required
+              style={inputStyle}
+              placeholder="Username"
+              fullWidth
+              disabled
+            />
+            <Input
+              type="password"
+              id="oldpassword"
+              onChange={(e) => setOldPwd(e.target.value)}
+              value={oldPwd}
+              required
+              placeholder="Old Password"
+              fullWidth
+              style={inputStyle}
+            />
+            <Input
+              type="password"
+              id="password"
+              onChange={(e) => setPwd(e.target.value)}
+              value={pwd}
+              required
+              placeholder="Password"
+              fullWidth
+              style={inputStyle}
+            />
+            <Input
+              type="password"
+              id="repassword"
+              onChange={(e) => setRePwd(e.target.value)}
+              value={rePwd}
+              required
+              placeholder="Repeat Password"
+              fullWidth
+              style={inputStyle}
+            />
+            <Button
+              style={btnstyle}
+              type="submit"
+              color="primary"
+              variant="contained"
+              fullWidth
+            >
+              Submit
+            </Button>
+            <Box sx={{ textAlign: "center", mt: 3 }}>
+              <Button onClick={() => setResetPwd(false)}>Back</Button>
+            </Box>
+          </Paper>
+        </form>
+        <p
+          ref={errRef}
+          role="alert"
+          className={errMsg ? "errmsg" : "offscreen"}
+          aria-live="assertive"
+          style={errorStyle}
+        >
+          {errMsg}
+        </p>
+      </Grid>
+    </div>
+  );
+};
