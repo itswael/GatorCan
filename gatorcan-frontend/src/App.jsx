@@ -18,6 +18,7 @@ import CourseDiscussions from "./components/Student/Courses/CourseDiscussions";
 import CourseGrades from "./components/Student/Courses/CourseGrades";
 import CourseChat from "./components/Student/Courses/CourseChat";
 import CourseSyllabus from "./components/Student/Courses/CourseSyllabus";
+import CourseAssignment from "./components/Student/Courses/CourseAssignment";
 import Dummy from "./components/Dummy";
 import "./App.css";
 
@@ -147,6 +148,15 @@ function App() {
         element={
           <ProtectedDashboard allowedRoles={["student"]}>
             <CourseSyllabus />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="student-course/:id/discussions/"
+        element={
+          <ProtectedDashboard allowedRoles={["student"]}>
+            <CourseDiscussions />
           </ProtectedDashboard>
         }
       />
