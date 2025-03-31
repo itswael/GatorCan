@@ -22,7 +22,35 @@ import LogoutRoundedIcon from "@mui/icons-material/Logout";
 import CourseService from "../../services/CourseService";
 
 function MyListItem({ icon, name, path, handleNavigate }) {
-  
+  const [open, setOpen] = useState(false);
+  const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [loadingEnrolledCourses, setLoadingEnrolledCourses] = useState(false);
+
+  const handleToggle = () => {
+    setOpen((prev) => !prev);
+  };
+
+  const handleClose = () => {
+    if (open) setOpen(false);
+  };
+
+  const loadEnrolledCourses = async () => {
+    setLoadingEnrolledCourses(true);
+    try {
+      const courses = await CourseService.fetchEnrolledCourses();
+      setEnrolledCourses(courses);
+    } catch (error) {
+      console.error("Error fetching courses:", error);
+    } finally {
+      setLoadingEnrolledCourses(false);
+    }
+  };
+
+  useEffect(() => {
+    if (open) {
+      loadEnrolledCourses();
+    }
+  }, [open]);
 
   if (name === "Courses") {
     return (
