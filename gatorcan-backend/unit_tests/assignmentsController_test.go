@@ -1,6 +1,8 @@
 package unit_tests
 
 import (
+	"bytes"
+	"encoding/json"
 	dtos "gatorcan-backend/DTOs"
 	"gatorcan-backend/controllers"
 	"gatorcan-backend/errors"
@@ -203,6 +205,151 @@ func TestGetAssignment(t *testing.T) {
 
 			// Execute controller method
 			assignmentController.GetAssignment(c)
+
+			// Assert response
+			assert.Equal(t, tc.expectedStatus, w.Code)
+			if tc.expectedBody != "" {
+				assert.JSONEq(t, tc.expectedBody, w.Body.String())
+			}
+
+			// Verify all mock expectations were met
+			mockService.AssertExpectations(t)
+		})
+	}
+}
+
+func TestUploadFileToAssignment(t *testing.T) {
+	// Setup
+	gin.SetMode(gin.TestMode)
+	logger := log.New(io.Discard, "", 0)
+
+	tests := []struct {
+		name              string
+		username          string
+		courseIDParam     string
+		assignmentIDParam string
+		requestBody       map[string]interface{}
+		setupMock         func(*mocks.MockAssignmentService)
+		expectedStatus    int
+		expectedBody      string
+	}{
+		{
+			name:              "Success",
+			username:          "testuser",
+			courseIDParam:     "1",
+			assignmentIDParam: "2",
+			requestBody: map[string]interface{}{
+				"file_url":  "https://example.com/file.pdf",
+				"filename":  "assignment.pdf",
+				"file_type": "application/pdf",
+			},
+			setupMock: func(m *mocks.MockAssignmentService) {
+				// uploadData := &dtos.UploadFileToAssignmentDTO{
+				// 	CourseID:     1,
+				// 	AssignmentID: 2,
+				// 	FileURL:      "https://example.com/file.pdf",
+				// 	Filename:     "assignment.pdf",
+				// 	FileType:     "application/pdf",
+				// }
+				response := &dtos.UploadFileToAssignmentResponseDTO{
+					AssignmentID: 1,
+					FileURL:      "https://example.com/file.pdf",
+					FileName:     "assignment.pdf",
+					FileType:     "application/pdf",
+					UploadedAt:   time.Now(),
+					//Message:      "File uploaded successfully",
+				}
+				m.On("UploadFileToAssignment", mock.Anything, mock.Anything, "testuser", mock.MatchedBy(func(data *dtos.UploadFileToAssignmentDTO) bool {
+					return data.CourseID == 1 && data.AssignmentID == 2
+				})).Return(response, nil)
+			},
+			expectedStatus: http.StatusCreated,
+		},
+		{
+			name:              "Unauthorized",
+			username:          "",
+			courseIDParam:     "1",
+			assignmentIDParam: "2",
+			requestBody: map[string]interface{}{
+				"file_url":  "https://example.com/file.pdf",
+				"filename":  "assignment.pdf",
+				"file_type": "application/pdf",
+			},
+			setupMock:      func(m *mocks.MockAssignmentService) {},
+			expectedStatus: http.StatusUnauthorized,
+			expectedBody:   `{"error": "Unauthorized"}`,
+		},
+		{
+			name:              "Invalid Course ID",
+			username:          "testuser",
+			courseIDParam:     "invalid",
+			assignmentIDParam: "2",
+			requestBody: map[string]interface{}{
+				"file_url":  "https://example.com/file.pdf",
+				"filename":  "assignment.pdf",
+				"file_type": "application/pdf",
+			},
+			setupMock:      func(m *mocks.MockAssignmentService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   `{"error": "Invalid course ID"}`,
+		},
+		{
+			name:              "User Not Found",
+			username:          "nonexistent",
+			courseIDParam:     "1",
+			assignmentIDParam: "2",
+			requestBody: map[string]interface{}{
+				"file_url":  "https://example.com/file.pdf",
+				"filename":  "assignment.pdf",
+				"file_type": "application/pdf",
+			},
+			setupMock: func(m *mocks.MockAssignmentService) {
+				m.On("UploadFileToAssignment", mock.Anything, mock.Anything, "nonexistent", mock.MatchedBy(func(data *dtos.UploadFileToAssignmentDTO) bool {
+					return data.CourseID == 1 && data.AssignmentID == 2
+				})).Return(nil, errors.ErrUserNotFound)
+			},
+			expectedStatus: http.StatusNotFound,
+			expectedBody:   `{"error": "User not found"}`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Setup mock service
+			mockService := new(mocks.MockAssignmentService)
+			tc.setupMock(mockService)
+
+			// Create controller
+			assignmentController := controllers.NewAssignmentController(mockService, logger)
+
+			// Setup HTTP request context
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+
+			// Add URL parameters
+			c.Params = gin.Params{
+				{Key: "cid", Value: tc.courseIDParam},
+				{Key: "aid", Value: tc.assignmentIDParam},
+			}
+
+			// Set username
+			if tc.username != "" {
+				c.Set("username", tc.username)
+			}
+
+			// Create request body
+			var bodyBytes []byte
+			if tc.requestBody != nil {
+				bodyBytes, _ = json.Marshal(tc.requestBody)
+			}
+
+			// Create mock request
+			req := httptest.NewRequest("POST", "/courses/"+tc.courseIDParam+"/assignments/"+tc.assignmentIDParam+"/upload", bytes.NewBuffer(bodyBytes))
+			req.Header.Set("Content-Type", "application/json")
+			c.Request = req
+
+			// Execute controller method
+			assignmentController.UploadFileToAssignment(c)
 
 			// Assert response
 			assert.Equal(t, tc.expectedStatus, w.Code)
