@@ -11,8 +11,15 @@ import StudentInbox from "./components/Student/StudentInbox";
 import StudentProfile from "./components/Student/StudentProfile";
 import StudentCourses from "./components/Student/StudentCourses";
 import AdminProfile from "./components/Admin/AdminProfile"
-import CourseDetails from "./components/Student/Courses/CourseDetails";
-
+import CourseHome from "./components/Student/Courses/CourseHome";
+import CourseAssignments from "./components/Student/Courses/CourseAssignments";
+import CourseAnnouncements from "./components/Student/Courses/CourseAnnouncements";
+import CourseDiscussions from "./components/Student/Courses/CourseDiscussions";
+import CourseGrades from "./components/Student/Courses/CourseGrades";
+import CourseChat from "./components/Student/Courses/CourseChat";
+import CourseSyllabus from "./components/Student/Courses/CourseSyllabus";
+import CourseAssignment from "./components/Student/Courses/CourseAssignment";
+import Dummy from "./components/Dummy";
 import "./App.css";
 
 function App() {
@@ -95,10 +102,82 @@ function App() {
         path="student-course/:id"
         element={
           <ProtectedDashboard allowedRoles={["student"]}>
-            <CourseDetails />
+            <CourseHome />
           </ProtectedDashboard>
         }
       />
+
+      <Route
+        path="student-course/:id/assignments/"
+        element={
+          <ProtectedDashboard allowedRoles={["student"]}>
+            <CourseAssignments />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="student-courses/:id/assignments/:assignment_id"
+        element={
+          <ProtectedDashboard allowedRoles={["student"]}>
+            <CourseAssignment />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="student-course/:id/announcements/"
+        element={
+          <ProtectedDashboard allowedRoles={["student"]}>
+            <CourseAnnouncements />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="student-course/:id/grades/"
+        element={
+          <ProtectedDashboard allowedRoles={["student"]}>
+            <CourseGrades />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="student-course/:id/syllabus/"
+        element={
+          <ProtectedDashboard allowedRoles={["student"]}>
+            <CourseSyllabus />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="student-course/:id/discussions/"
+        element={
+          <ProtectedDashboard allowedRoles={["student"]}>
+            <CourseDiscussions />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="student-course/:id/chat/"
+        element={
+          <ProtectedDashboard allowedRoles={["student"]}>
+            <CourseChat />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="dummy"
+        element={
+          <ProtectedDashboard allowedRoles={["student", "admin", "instructor"]}>
+            <Dummy />
+          </ProtectedDashboard>
+        }
+      ></Route>
 
       <Route path="*" element={<Login />} />
     </Routes>
