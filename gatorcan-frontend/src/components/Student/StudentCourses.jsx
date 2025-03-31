@@ -34,6 +34,17 @@ function StudentCourses() {
     }
   };
 
+  const colors = [
+    "forestgreen",
+    "darkorchid",
+    "MediumVioletRed",
+    "crimson",
+    "teal",
+    "royalblue",
+    "darkslateblue",
+    "indigo",
+  ];
+
   return (
     <>
       <StudentNavbar />
@@ -41,23 +52,7 @@ function StudentCourses() {
         <h1>Courses</h1>
         <hr />
 
-        <h4>Enrolled Courses</h4>
-        <hr />
-        {loadingEnrolledCourses ? (
-          <p>Loading enrolled courses...</p>
-        ) : enrolledCourses.length === 0 ? (
-          <p>No enrolled courses</p>
-        ) : (
-          <div className="grid-container">
-            {enrolledCourses.map((course) => (
-              <CourseCard key={course.id} course={course} isEnrolled />
-            ))}
-          </div>
-        )}
-
-        <br />
-
-        <h4>All Courses</h4>
+        <h3>All Courses</h3>
         <hr />
         {loadingAllCourses ? (
           <p>Loading courses...</p>
@@ -65,15 +60,36 @@ function StudentCourses() {
           <p>No course available</p>
         ) : (
           <div className="grid-container">
-            {allCourses.map((course) => (
+            {allCourses.map((course, index) => (
               <CourseCard
                 key={course.id}
                 course={course}
                 enrollInCourse={handleEnroll}
+                color={colors[index % colors.length]}
               />
             ))}
           </div>
         )}
+        <h3>Enrolled Courses</h3>
+        <hr />
+        {loadingEnrolledCourses ? (
+          <p>Loading enrolled courses...</p>
+        ) : enrolledCourses.length === 0 ? (
+          <p>No enrolled courses</p>
+        ) : (
+          <div className="grid-container">
+            {enrolledCourses.map((course, index) => (
+              <CourseCard
+                key={course.id}
+                course={course}
+                isEnrolled
+                color={colors[index % colors.length]}
+              />
+            ))}
+          </div>
+        )}
+
+        <br />
       </div>
       <style>
         {`
@@ -101,7 +117,7 @@ function StudentCourses() {
   );
 }
 
-const CourseCard = ({ course, enrollInCourse, isEnrolled = false }) => {
+const CourseCard = ({ course, enrollInCourse, isEnrolled = false, color }) => {
   return (
     <div
       style={{
@@ -116,7 +132,7 @@ const CourseCard = ({ course, enrollInCourse, isEnrolled = false }) => {
         position: "relative",
       }}
     >
-      <h3 style={{ textAlign: "center" }}>{course.name}</h3>
+      <h3 style={{ textAlign: "center", color: color }}>{course.name}</h3>
       <p style={{ textAlign: "left", marginTop: "5px" }}>
         {course.description}
       </p>
