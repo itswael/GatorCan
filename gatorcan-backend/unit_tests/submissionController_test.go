@@ -1,6 +1,7 @@
 package unit_tests
 
 import (
+	"fmt"
 	dtos "gatorcan-backend/DTOs"
 	"gatorcan-backend/controllers"
 	"gatorcan-backend/errors"
@@ -10,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -185,6 +187,200 @@ func TestGetSubmission(t *testing.T) {
 			// Assert response body if expected and checkBody is true
 			if tc.checkBody && tc.expectedBody != "" {
 				assert.JSONEq(t, tc.expectedBody, w.Body.String())
+			}
+
+			// Verify mock expectations were met
+			mockUserService.AssertExpectations(t)
+			mockSubmissionService.AssertExpectations(t)
+		})
+	}
+}
+
+func TestGradeSubmission(t *testing.T) {
+	// Setup
+	gin.SetMode(gin.TestMode)
+	logger := log.New(io.Discard, "", 0)
+
+	tests := []struct {
+		name                string
+		username            string
+		courseID            string
+		gradeRequestBody    string
+		setupUserMock       func(*mocks.MockUserService)
+		setupSubmissionMock func(*mocks.MockSubmissionService)
+		expectedStatus      int
+		expectedBody        string
+		checkBody           bool
+	}{
+		{
+			name:     "Success",
+			username: "instructor1",
+			courseID: "1",
+			gradeRequestBody: `{
+				"assignment_id": 1,
+				"user_id": 1,
+				"course_id": 1,
+				"grade": 90,
+				"feedback": "Well done!"
+			}`,
+			setupUserMock: func(m *mocks.MockUserService) {
+				// No need to mock any user service methods for GradeSubmission
+			},
+			setupSubmissionMock: func(m *mocks.MockSubmissionService) {
+				// Create expected dto that matches the JSON in the request
+				expectedDTO := &dtos.GradeSubmissionRequestDTO{
+					AssignmentID: 1,
+					UserID:       1,
+					CourseID:     1,
+					Grade:        90,
+					Feedback:     "Well done!",
+				}
+
+				m.On("GradeSubmission", mock.Anything, mock.Anything, "instructor1", mock.MatchedBy(func(dto *dtos.GradeSubmissionRequestDTO) bool {
+					return dto.AssignmentID == expectedDTO.AssignmentID &&
+						dto.UserID == expectedDTO.UserID &&
+						dto.CourseID == expectedDTO.CourseID &&
+						dto.Grade == expectedDTO.Grade &&
+						dto.Feedback == expectedDTO.Feedback
+				})).Return(&dtos.GradeSubmissionResponseDTO{
+					AssignmentID: 1,
+					CourseID:     1,
+					UserID:       1,
+					Grade:        90,
+					Feedback:     "Well done!",
+				}, nil)
+			},
+			expectedStatus: http.StatusOK,
+			checkBody:      false,
+		},
+		{
+			name:                "Unauthorized",
+			username:            "",
+			courseID:            "1",
+			gradeRequestBody:    `{"assignment_id": 1, "user_id": 1, "course_id": 1, "grade": 90, "feedback": "Well done!"}`,
+			setupUserMock:       func(m *mocks.MockUserService) {},
+			setupSubmissionMock: func(m *mocks.MockSubmissionService) {},
+			expectedStatus:      http.StatusUnauthorized,
+			expectedBody:        `{"error":"Unauthorized"}`,
+			checkBody:           true,
+		},
+		{
+			name:     "Invalid Course ID",
+			username: "instructor1",
+			courseID: "invalid",
+			gradeRequestBody: `{
+				"assignment_id": 1,
+				"user_id": 1,
+				"course_id": 1,
+				"grade": 90,
+				"feedback": "Well done!"
+			}`,
+			setupUserMock:       func(m *mocks.MockUserService) {},
+			setupSubmissionMock: func(m *mocks.MockSubmissionService) {},
+			expectedStatus:      http.StatusBadRequest,
+			expectedBody:        `{"error":"Invalid course ID"}`,
+			checkBody:           true,
+		},
+		{
+			name:     "Invalid Request Body",
+			username: "instructor1",
+			courseID: "1",
+			gradeRequestBody: `{
+				"invalid_json":
+			}`,
+			setupUserMock:       func(m *mocks.MockUserService) {},
+			setupSubmissionMock: func(m *mocks.MockSubmissionService) {},
+			expectedStatus:      http.StatusBadRequest,
+			expectedBody:        `{"error":"Invalid request body"}`,
+			checkBody:           true,
+		},
+		{
+			name:     "Submission Not Found",
+			username: "instructor1",
+			courseID: "1",
+			gradeRequestBody: `{
+				"assignment_id": 99,
+				"user_id": 1,
+				"course_id": 1,
+				"grade": 90,
+				"feedback": "Well done!"
+			}`,
+			setupUserMock: func(m *mocks.MockUserService) {
+				// No need to mock any user service methods
+			},
+			setupSubmissionMock: func(m *mocks.MockSubmissionService) {
+				m.On("GradeSubmission", mock.Anything, mock.Anything, "instructor1", mock.Anything).Return(nil, errors.ErrSubmissionNotFound)
+			},
+			expectedStatus: http.StatusNotFound,
+			expectedBody:   `{"error":"Submission not found"}`,
+			checkBody:      true,
+		},
+		{
+			name:     "Server Error",
+			username: "instructor1",
+			courseID: "1",
+			gradeRequestBody: `{
+				"assignment_id": 1,
+				"user_id": 1,
+				"course_id": 1,
+				"grade": 90,
+				"feedback": "Well done!"
+			}`,
+			setupUserMock: func(m *mocks.MockUserService) {
+				// No need to mock any user service methods
+			},
+			setupSubmissionMock: func(m *mocks.MockSubmissionService) {
+				m.On("GradeSubmission", mock.Anything, mock.Anything, "instructor1", mock.Anything).Return(nil, errors.ErrGradingSubmissionFailed)
+			},
+			expectedStatus: http.StatusInternalServerError,
+			expectedBody:   `{"error":"Error grading submission"}`,
+			checkBody:      true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Setup mock services
+			mockSubmissionService := new(mocks.MockSubmissionService)
+			mockUserService := new(mocks.MockUserService)
+
+			tc.setupUserMock(mockUserService)
+			tc.setupSubmissionMock(mockSubmissionService)
+
+			// Create controller
+			submissionController := controllers.NewSubmissionController(mockSubmissionService, mockUserService, logger)
+
+			// Setup router with middleware to set username
+			router := gin.New()
+			router.Use(func(c *gin.Context) {
+				if tc.username != "" {
+					c.Set("username", tc.username)
+				}
+				c.Next()
+			})
+
+			// Add the route
+			router.POST("/courses/:cid/submissions/grade", submissionController.GradeSubmission)
+
+			// Setup the recorder
+			w := httptest.NewRecorder()
+
+			// Create the test URL with the course ID parameter
+			url := fmt.Sprintf("/courses/%s/submissions/grade", tc.courseID)
+
+			// Create request with JSON body
+			req := httptest.NewRequest("POST", url, strings.NewReader(tc.gradeRequestBody))
+			req.Header.Set("Content-Type", "application/json")
+
+			// Execute the request
+			router.ServeHTTP(w, req)
+
+			// Assert status code
+			assert.Equal(t, tc.expectedStatus, w.Code, "Expected status %d but got %d", tc.expectedStatus, w.Code)
+
+			// Assert response body if expected and checkBody is true
+			if tc.checkBody && tc.expectedBody != "" {
+				assert.JSONEq(t, tc.expectedBody, w.Body.String(), "Expected body %s but got %s", tc.expectedBody, w.Body.String())
 			}
 
 			// Verify mock expectations were met
