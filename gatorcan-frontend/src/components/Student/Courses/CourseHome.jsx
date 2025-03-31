@@ -6,6 +6,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useParams } from "react-router-dom";
+import { fetchCourse } from "../../../services/CourseService";
 import CourseNavbar from "./CourseNavbar";
 import "react-chat-widget/lib/styles.css";
 
