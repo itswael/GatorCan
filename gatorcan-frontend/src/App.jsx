@@ -11,8 +11,7 @@ import StudentInbox from "./components/Student/StudentInbox";
 import StudentProfile from "./components/Student/StudentProfile";
 import StudentCourses from "./components/Student/StudentCourses";
 import AdminProfile from "./components/Admin/AdminProfile"
-import CourseDetails from "./components/Student/Courses/CourseDetails";
-
+import Dummy from "./components/Dummy";
 import "./App.css";
 
 function App() {
@@ -91,14 +90,16 @@ function App() {
         }
       />
 
+      
+
       <Route
-        path="student-course/:id"
+        path="dummy"
         element={
-          <ProtectedDashboard allowedRoles={["student"]}>
-            <CourseDetails />
+          <ProtectedDashboard allowedRoles={["student", "admin", "instructor"]}>
+            <Dummy />
           </ProtectedDashboard>
         }
-      />
+      ></Route>
 
       <Route path="*" element={<Login />} />
     </Routes>
