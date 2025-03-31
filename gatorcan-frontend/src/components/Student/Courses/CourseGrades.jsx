@@ -119,7 +119,7 @@ function Grades({ upcomingAssignments, pastAssignments }) {
           <TableRow>
             <TableCell colSpan={3}>Total</TableCell>
             <TableCell>0</TableCell>
-            <TableCell>0%</TableCell>
+            <TableCell>0.0%</TableCell>
           </TableRow>
         </Table>
       </TableContainer>
