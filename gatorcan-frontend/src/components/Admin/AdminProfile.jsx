@@ -25,7 +25,38 @@ const AdminProfile = () => {
   const [loading, setloading] = useState(true);
   const [resetPwd, setResetPwd] = useState(false);
 
-  
+  const [errMsg, setErrMsg] = useState("");
+
+  const fetchUserDetails = async () => {
+    setloading(true);
+
+    try {
+      const response = await getUserDetails(username);
+      if (response["success"]) {
+        setEmail(response["data"]?.email);
+      } else {
+        if (response["message"] != undefined) {
+          setErrMsg(response.message);
+        } else {
+          setErrMsg("Unknow error occured");
+        }
+      }
+    } catch (e) {
+      setErrMsg(e.message);
+    }
+    setloading(false);
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await fetchUserDetails();
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    setErrMsg("");
+  }, [loading]);
 
   return (
     <>
@@ -92,7 +123,13 @@ const AdminProfile = () => {
 
 export default AdminProfile;
 
-
+const Loading = () => {
+  return (
+    <div>
+      <CircularProgress></CircularProgress>
+    </div>
+  );
+};
 
 const ResetPassword = ({ setResetPwd }) => {
   const username = localStorage.getItem("username");
