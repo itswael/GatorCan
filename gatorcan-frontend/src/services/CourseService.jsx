@@ -56,11 +56,11 @@ export const enrollInCourse = async (courseID) => {
       { headers: getAuthHeader() }
     );
 
-    alert(`Successfully enrolled in course ID: ${courseID}`);
+    //alert(`Successfully enrolled in course ID: ${courseID}`);
     return { success: true };
   } catch (error) {
     console.error("Error enrolling in course:", error);
-    alert("Enrollment failed!");
+    //alert("Enrollment failed!");
     return { success: false };
   }
 };
@@ -80,9 +80,44 @@ export const fetchCourse = async ({id}) => {
   }
 };
 
+// fetch current course assignments
+export const fetchAssignments = async ({id}) => {
+  try {
+    const response = await axios.get(`${base_url}/${id}/assignments`, {
+      headers: getAuthHeader(),
+    });
+
+    if (response.data === null) return [];
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching course assignments:", error);
+    return [];
+  }
+};
+
+// fetch current course assignment details
+export const fetchAssignmentDetails = async ({ id, assignment_id }) => {
+  try {
+    const response = await axios.get(
+      `${base_url}/${id}/assignments/${assignment_id}`,
+      {
+        headers: getAuthHeader(),
+      }
+    );
+
+    if (response.data === null) return [];
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching course assignment details:", error);
+    return [];
+  }
+};
+
 export default {
   fetchAllCourses,
   fetchEnrolledCourses,
   enrollInCourse,
   fetchCourse,
+  fetchAssignments,
+  fetchAssignmentDetails,
 };

@@ -1,6 +1,7 @@
 import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
+import ButtonBase from "@mui/material/CardActionArea";
 import CampaignIcon from '@mui/icons-material/Campaign';
 import Typography from "@mui/material/Typography";
 import EditNoteIcon from "@mui/icons-material/EditNote";
@@ -10,23 +11,30 @@ import { Container } from "@mui/material";
 import StudentNavbar from "./StudentNavbar";
 import CourseService from "../../services/CourseService";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 import React from 'react'
 
-function MediaCard({text1, text2, color}) {
+function MediaCard({ text1, text2, color, course_id }) {
+  const navigate = useNavigate();
+  const handleNavigate = (path) => {
+    navigate(path, { replace: false });
+  };
   return (
     <Card sx={{ maxWidth: 250, margin: "20px" }} elevation={10}>
-      <Container
-        sx={{ backgroundColor: color, height: "150px" }}
-      ></Container>
-      <CardContent>
-        <Typography gutterBottom variant="h8" component="div" color={color}>
-          {text1}
-        </Typography>
-        <Typography variant="body2" sx={{ color: "text.secondary" }}>
-          {text2}
-        </Typography>
-      </CardContent>
+      <ButtonBase
+        onClick={() => handleNavigate(`/student-course/${course_id}`)}
+      >
+        <Container sx={{ backgroundColor: color, height: "150px" }}></Container>
+        <CardContent>
+          <Typography gutterBottom variant="h8" component="div" color={color}>
+            {text1}
+          </Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            {text2}
+          </Typography>
+        </CardContent>
+      </ButtonBase>
     </Card>
   );
 }
@@ -47,7 +55,16 @@ function StudentDashboard() {
     loadEnrolledCourses();
   }, []);
 
-  const colors = ["forestgreen", "darkorchid", "MediumVioletRed"];
+  const colors = [
+    "forestgreen",
+    "darkorchid",
+    "MediumVioletRed",
+    "crimson",
+    "teal",
+    "royalblue",
+    "darkslateblue",
+    "indigo",
+  ];
 
   return (
     <>
@@ -56,7 +73,7 @@ function StudentDashboard() {
         <h1>Dashboard</h1>
         <hr />
         <br></br>
-        <h4>My Courses</h4>
+        <h3>My Courses</h3>
         <div
           style={{
             display: "flex",
@@ -78,6 +95,7 @@ function StudentDashboard() {
                   text1={course.name}
                   text2={course.description}
                   color={colors[index % colors.length]}
+                  course_id={course.id}
                 ></MediaCard>
               );
             })
