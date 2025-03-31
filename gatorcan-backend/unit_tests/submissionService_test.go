@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
@@ -195,6 +196,103 @@ func TestGradeSubmission_service(t *testing.T) {
 			mockCourseRepo.AssertExpectations(t)
 			mockSubmissionRepo.AssertExpectations(t)
 			mockHTTPClient.AssertExpectations(t)
+		})
+	}
+}
+
+func TestGetSubmissionService(t *testing.T) {
+	// Setup mocks
+	mockSubmissionRepo := new(mocks.MockSubmissionRepository)
+	mockAssignmentRepo := new(mocks.MockAssignmentRepository)
+
+	// Create service
+	submissionService := services.NewSubmissionService(
+		mockSubmissionRepo,
+		mockAssignmentRepo,
+		nil, // userRepo not needed for this test
+		nil, // courseRepo not needed for this test
+		nil, // config not needed for this test
+		nil, // httpClient not needed for this test
+	)
+
+	// Setup context
+	ctx := context.Background()
+
+	// Test data
+	testSubmission := &models.Submission{
+		ID:           1,
+		AssignmentID: 2,
+		UserID:       101,
+		File_url:     "https://example.com/submission.pdf",
+		Grade:        85,
+		Feedback:     "Good work!",
+		Updated_at:   time.Now(),
+	}
+
+	testAssignment := &models.Assignment{
+		ID:        2,
+		MaxPoints: 100,
+	}
+
+	tests := []struct {
+		name          string
+		courseID      int
+		assignmentID  int
+		userID        uint
+		mockSetup     func()
+		expectedError error
+		expectResult  bool
+	}{
+		{
+			name:         "Success",
+			courseID:     1,
+			assignmentID: 2,
+			userID:       101,
+			mockSetup: func() {
+				mockSubmissionRepo.On("GetSubmission", ctx, 1, 2, uint(101)).Return(testSubmission, nil)
+				mockAssignmentRepo.On("GetAssignmentByIDAndCourseID", ctx, 2, 1).Return(*testAssignment, nil)
+			},
+			expectedError: nil,
+			expectResult:  true,
+		},
+		{
+			name:         "Submission Not Found",
+			courseID:     1,
+			assignmentID: 999,
+			userID:       101,
+			mockSetup: func() {
+				mockSubmissionRepo.On("GetSubmission", ctx, 1, 999, uint(101)).Return(nil, errors.New("submission not found"))
+			},
+			expectedError: errors.New("submission not found"),
+			expectResult:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Setup mocks
+			tc.mockSetup()
+
+			// Call the service
+			result, err := submissionService.GetSubmission(ctx, tc.courseID, tc.assignmentID, tc.userID)
+
+			// Assertions
+			if tc.expectedError != nil {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectedError, err)
+				assert.Nil(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.Equal(t, testSubmission.File_url, result.FileURL)
+				assert.Equal(t, testSubmission.Grade, result.Grade)
+				assert.Equal(t, testSubmission.Feedback, result.Feedback)
+				assert.Equal(t, testAssignment.MaxPoints, result.MaxPoints)
+			}
+
+			// Verify expectations
+			mockSubmissionRepo.AssertExpectations(t)
+			mockAssignmentRepo.AssertExpectations(t)
 		})
 	}
 }
