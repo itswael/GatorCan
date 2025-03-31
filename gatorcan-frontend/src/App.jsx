@@ -17,6 +17,7 @@ import CourseAnnouncements from "./components/Student/Courses/CourseAnnouncement
 import CourseDiscussions from "./components/Student/Courses/CourseDiscussions";
 import CourseGrades from "./components/Student/Courses/CourseGrades";
 import CourseChat from "./components/Student/Courses/CourseChat";
+import CourseSyllabus from "./components/Student/Courses/CourseSyllabus";
 import Dummy from "./components/Dummy";
 import "./App.css";
 
@@ -137,6 +138,15 @@ function App() {
         element={
           <ProtectedDashboard allowedRoles={["student"]}>
             <CourseGrades />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="student-course/:id/syllabus/"
+        element={
+          <ProtectedDashboard allowedRoles={["student"]}>
+            <CourseSyllabus />
           </ProtectedDashboard>
         }
       />
