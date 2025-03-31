@@ -22,35 +22,7 @@ import LogoutRoundedIcon from "@mui/icons-material/Logout";
 import CourseService from "../../services/CourseService";
 
 function MyListItem({ icon, name, path, handleNavigate }) {
-  const [open, setOpen] = useState(false);
-  const [enrolledCourses, setEnrolledCourses] = useState([]);
-  const [loadingEnrolledCourses, setLoadingEnrolledCourses] = useState(false);
-
-  const handleToggle = () => {
-    setOpen((prev) => !prev);
-  };
-
-  const handleClose = () => {
-    if (open) setOpen(false);
-  };
-
-  const loadEnrolledCourses = async () => {
-    setLoadingEnrolledCourses(true);
-    try {
-      const courses = await CourseService.fetchEnrolledCourses();
-      setEnrolledCourses(courses);
-    } catch (error) {
-      console.error("Error fetching courses:", error);
-    } finally {
-      setLoadingEnrolledCourses(false);
-    }
-  };
-
-  useEffect(() => {
-    if (open) {
-      loadEnrolledCourses();
-    }
-  }, [open]);
+  
 
   if (name === "Courses") {
     return (
@@ -80,29 +52,31 @@ function MyListItem({ icon, name, path, handleNavigate }) {
                 position: "absolute",
                 left: "100%",
                 top: "0%",
-                minWidth: "180px",
-                backgroundColor: "rgb(29, 74, 124)",
-                color: "orange",
+                minWidth: "300px",
+                backgroundColor: "white",
+                color: "rgb(29, 74, 124)",
                 border: "1px solid white",
                 zIndex: 30,
                 padding: "10px",
                 borderRadius: "8px",
-                boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.2)",
+                boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.2)",
               }}
             >
+              <h3>All Courses</h3>
+              <hr/>
               <List>
                 {loadingEnrolledCourses ? (
                   <ListItem>
                     <ListItemText
                       primary="Loading..."
-                      sx={{ padding: "5px", color: "white" }}
+                      sx={{ padding: "2px", color: "white" }}
                     />
                   </ListItem>
                 ) : enrolledCourses.length === 0 ? (
                   <ListItem>
                     <ListItemText
                       primary="No courses enrolled"
-                      sx={{ padding: "5px", color: "white" }}
+                      sx={{ padding: "2px", color: "rgb(29, 74, 124)" }}
                     />
                   </ListItem>
                 ) : (
@@ -110,22 +84,25 @@ function MyListItem({ icon, name, path, handleNavigate }) {
                     <ListItem
                       button
                       key={index}
-                      onClick={() => handleNavigate(`/student-course/${course.id}`)}
+                      onClick={() =>
+                        handleNavigate(`/student-course/${course.id}`)
+                      }
                     >
                       <ListItemText
-                        primary={course.name}
-                        sx={{ padding: "5px", color: "white" }}
+                        primary={"#" + course.id + "-" + course.name}
+                        sx={{ padding: "0px", color: "rgb(29, 74, 124)" }}
                       />
                     </ListItem>
                   ))
                 )}
+                <hr />
                 <ListItem
                   button
                   onClick={() => handleNavigate("/student-courses")}
                 >
                   <ListItemText
-                    primary="View all courses"
-                    sx={{ padding: "5px", color: "white" }}
+                    primary="Add course"
+                    sx={{ padding: "2px", color: "rgb(29, 74, 124)" }}
                   />
                 </ListItem>
               </List>
@@ -196,7 +173,6 @@ function StudentNavbar() {
         },
       }}
     >
-      {/* Top Menu Items */}
       <Box sx={{ flexGrow: 1 }}>
         <List>
           <ListItem button>
@@ -247,7 +223,6 @@ function StudentNavbar() {
         </List>
       </Box>
 
-      {/* Logout Button at the Bottom */}
       <List>
         <ListItem
           button
