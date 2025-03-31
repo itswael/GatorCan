@@ -13,6 +13,7 @@ import StudentCourses from "./components/Student/StudentCourses";
 import AdminProfile from "./components/Admin/AdminProfile"
 import CourseHome from "./components/Student/Courses/CourseHome";
 import CourseAssignments from "./components/Student/Courses/CourseAssignments";
+import CourseAnnouncements from "./components/Student/Courses/CourseAnnouncements";
 import Dummy from "./components/Dummy";
 import "./App.css";
 
@@ -97,6 +98,15 @@ function App() {
         element={
           <ProtectedDashboard allowedRoles={["student"]}>
             <CourseHome />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="student-course/:id/assignments/"
+        element={
+          <ProtectedDashboard allowedRoles={["student"]}>
+            <CourseAssignments />
           </ProtectedDashboard>
         }
       />
