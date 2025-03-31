@@ -3,15 +3,20 @@ package unit_tests
 import (
 	"context"
 	"errors"
+	dtos "gatorcan-backend/DTOs"
 	"gatorcan-backend/config"
 	domainErrors "gatorcan-backend/errors"
 	"gatorcan-backend/models"
 	"gatorcan-backend/services"
 	"gatorcan-backend/unit_tests/mocks"
+	"log"
+	"os"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 )
 
 func TestGetAssignmentsByCourseID(t *testing.T) {
@@ -233,6 +238,175 @@ func TestGetAssignmentByIDAndCourseID(t *testing.T) {
 			// Verify mock expectations
 			mockAssignmentRepo.AssertExpectations(t)
 			mockCourseRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestUploadFileToAssignment_service(t *testing.T) {
+	// Setup mocks
+	mockAssignmentRepo := new(mocks.MockAssignmentRepository)
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockCourseRepo := new(mocks.MockCourseRepository)
+	mockHTTPClient := new(mocks.MockHTTPClient)
+
+	// Create test config
+	appConfig := &config.AppConfig{
+		Environment: "test",
+	}
+
+	// Create service with mocks
+	assignmentService := services.NewAssignmentService(
+		mockAssignmentRepo,
+		mockUserRepo,
+		mockCourseRepo,
+		appConfig,
+		mockHTTPClient,
+	)
+
+	// Setup context
+	ctx := context.Background()
+
+	// Test data
+	testFileName := "testfile.txt"
+	testFileURL := "http://example.com/testfile.txt"
+	testFileType := "text/plain"
+	now := time.Now()
+
+	// Mock user data (with proper ID set)
+	mockUser := &models.User{
+		Model:    gorm.Model{ID: 1},
+		Username: "testuser",
+		Roles:    []*models.Role{{Name: "student"}},
+	}
+
+	mockInstructor := &models.User{
+		Username: "instructor",
+		Roles:    []*models.Role{{Name: "instructor"}},
+	}
+
+	mockCourse := &models.Course{
+		ID:          201,
+		Name:        "Test Course",
+		Description: "Test Description",
+	}
+
+	// Mock active course data
+	mockActiveCourse := models.ActiveCourse{
+		ID:           101,
+		CourseID:     201,
+		InstructorID: 301,
+		StartDate:    now.Add(-24 * time.Hour),
+		EndDate:      now.Add(24 * time.Hour),
+		IsActive:     true,
+		Instructor:   *mockInstructor,
+		Course:       *mockCourse,
+		Capacity:     30,
+	}
+
+	// Mock assignment data
+	mockAssignment := &models.Assignment{
+		ID:             1,
+		Title:          "Test Assignment",
+		Description:    "Test Description",
+		Deadline:       now.Add(24 * time.Hour),
+		ActiveCourseID: 101,
+		MaxPoints:      100,
+	}
+
+	// We don't rely on a pre-built expected file object for timestamps.
+	// Instead, we’ll use 'now' to compare within an acceptable range.
+
+	tests := []struct {
+		name         string
+		courseID     int
+		assignmentID int
+		username     string
+		fileName     string
+		fileURL      string
+		FileType     string
+		mockSetup    func()
+		expectError  bool
+		errorType    error
+	}{
+		{
+			name:         "Success",
+			courseID:     101,
+			assignmentID: 1,
+			username:     "testuser",
+			fileName:     testFileName,
+			fileURL:      testFileURL,
+			FileType:     testFileType,
+			mockSetup: func() {
+				// Expect GetUserByUsername with "testuser"
+				mockUserRepo.On("GetUserByUsername", ctx, "testuser").
+					Return(mockUser, nil).Once()
+
+				// Expect GetCourseByID with 101 to return the active course
+				mockCourseRepo.On("GetCourseByID", ctx, 101).
+					Return(mockActiveCourse, nil).Once()
+
+				// Expect GetAssignmentByIDAndCourseID with (1, 101) to return the assignment
+				mockAssignmentRepo.On("GetAssignmentByIDAndCourseID", ctx, 1, 101).
+					Return(*mockAssignment, nil).Once()
+
+				// Expect CreateAssignmentFile to update the passed assignment file and simulate DB insertion by setting its ID.
+				mockAssignmentRepo.On("CreateAssignmentFile", ctx, mock.AnythingOfType("*models.AssignmentFile")).
+					Run(func(args mock.Arguments) {
+						fileArg := args.Get(1).(*models.AssignmentFile)
+						fileArg.FileName = testFileName
+						fileArg.FileURL = testFileURL
+						fileArg.FileType = testFileType
+						fileArg.AssignmentID = 1
+						fileArg.CreatedAt = now
+						fileArg.UpdatedAt = now
+						// Simulate DB-generated ID:
+						fileArg.ID = 1
+					}).
+					Return(nil).Once()
+
+				// Expect LinkUserToAssignmentFile to be called and return nil.
+				mockAssignmentRepo.On("LinkUserToAssignmentFile", ctx, mock.AnythingOfType("*models.UserAssignmentFile")).
+					Return(nil).Once()
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.mockSetup()
+
+			dto := &dtos.UploadFileToAssignmentDTO{
+				AssignmentID: uint(tc.assignmentID),
+				CourseID:     uint(tc.courseID),
+				FileURL:      tc.fileURL,
+				FileName:     tc.fileName,
+				FileType:     tc.FileType,
+			}
+			logger := log.New(os.Stdout, "test: ", log.LstdFlags)
+			// Call the service with the provided username ("testuser")
+			success, err := assignmentService.UploadFileToAssignment(ctx, logger, tc.username, dto)
+
+			if tc.expectError {
+				assert.Error(t, err)
+				if tc.errorType != nil {
+					assert.Equal(t, tc.errorType, err)
+				}
+				assert.Nil(t, success)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, success)
+				assert.Equal(t, tc.fileName, success.FileName)
+				assert.Equal(t, tc.fileURL, success.FileURL)
+				assert.Equal(t, tc.FileType, success.FileType)
+				// Instead of direct equality, assert that UploadedAt is within one second of 'now'.
+				assert.WithinDuration(t, now, success.UploadedAt, time.Second)
+			}
+
+			mockAssignmentRepo.AssertExpectations(t)
+			mockUserRepo.AssertExpectations(t)
+			mockCourseRepo.AssertExpectations(t)
+			mockHTTPClient.AssertExpectations(t)
 		})
 	}
 }
