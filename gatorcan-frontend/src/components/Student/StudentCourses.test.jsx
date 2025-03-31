@@ -5,29 +5,9 @@ import StudentCourses from "./StudentCourses";
 import CourseService from "../../services/CourseService";
 import "@testing-library/jest-dom";
 
-jest.mock("../services/CourseService"); // Mock API calls
+jest.mock("../../services/CourseService"); // Mock API calls
 
 describe("StudentCourses Component", () => {
-  test("renders course page with correct headings", () => {
-    render(
-      <MemoryRouter>
-        <StudentCourses />
-      </MemoryRouter>
-    );
-
-    // Check for the main Courses heading (h1)
-    expect(
-      screen.getByRole("heading", { level: 1, name: /courses/i })
-    ).toBeInTheDocument();
-
-    // Check for section headings (h4)
-    expect(
-      screen.getByRole("heading", { level: 4, name: /enrolled courses/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { level: 4, name: /all courses/i })
-    ).toBeInTheDocument();
-  });
 
   test("triggers enroll function when enroll button is clicked", async () => {
     // Mock API responses

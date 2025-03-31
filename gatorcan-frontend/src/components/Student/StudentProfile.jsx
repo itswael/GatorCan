@@ -8,6 +8,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Grid from "@mui/material/Grid2";
 import Paper from "@mui/material/Paper";
 import Input from "@mui/material/Input";
+import React from "react";
 
 const StudentProfile = () => {
 
