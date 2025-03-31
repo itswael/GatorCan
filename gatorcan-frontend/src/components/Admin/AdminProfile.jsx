@@ -61,11 +61,9 @@ const AdminProfile = () => {
   return (
     <>
       <AdminNavbar />
-      <Container maxWidth="sm" sx={{ mt: 4, textAlign: "center" }}>
-        <Typography variant="h4" sx={{ fontWeight: "bold", mb: 3 }}>
-          Profile
-        </Typography>
-
+      <h1>Profile</h1>
+      <hr />
+      <Container maxWidth="sm" sx={{ mt: 4 }}>
         {resetPwd ? (
           <ResetPassword setResetPwd={setResetPwd} />
         ) : (

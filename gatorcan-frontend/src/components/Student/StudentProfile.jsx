@@ -62,64 +62,67 @@ const StudentProfile = () => {
   return (
     <>
       <StudentNavbar />
-      <Container maxWidth="sm" sx={{ mt: 4, textAlign: "center" }}>
-        <Typography variant="h4" sx={{ fontWeight: "bold", mb: 3 }}>
-          Profile
-        </Typography>
+      <div style={{ marginLeft: "120px" }}>
+        <h1>Profile</h1>
+        <hr />
+        <br></br>
+        <Container maxWidth="sm" sx={{ mt: 4, textAlign: "center" }}>
+          {resetPwd ? (
+            <ResetPassword setResetPwd={setResetPwd} />
+          ) : (
+            <div>
+              {loading ? (
+                <Loading />
+              ) : (
+                <div>
+                  <Avatar
+                    alt="Profile Picture"
+                    src={photoUrl}
+                    sx={{ width: 120, height: 120, mx: "auto", mb: 2 }}
+                  />
 
-        {resetPwd ? (
-          <ResetPassword setResetPwd={setResetPwd} />
-        ) : (
-          <div>
-            {loading ? (
-              <Loading />
-            ) : (
-              <div>
-                <Avatar
-                  alt="Profile Picture"
-                  src={photoUrl}
-                  sx={{ width: 120, height: 120, mx: "auto", mb: 2 }}
-                />
+                  <Box sx={{ textAlign: "center", mt: 3 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: "bold", color: "gray" }}
+                    >
+                      Account Details
+                    </Typography>
+                    <Typography variant="body1">
+                      Username: {username}
+                    </Typography>
+                    <Typography variant="body1">Email: {email}</Typography>
+                  </Box>
 
-                <Box sx={{ textAlign: "center", mt: 3 }}>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: "bold", color: "gray" }}
-                  >
-                    Account Details
-                  </Typography>
-                  <Typography variant="body1">Username: {username}</Typography>
-                  <Typography variant="body1">Email: {email}</Typography>
-                </Box>
+                  <Box sx={{ textAlign: "center", mt: 3 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: "bold", color: "gray" }}
+                    >
+                      Personal Details
+                    </Typography>
+                    <Typography variant="body1">First Name: {first}</Typography>
+                    <Typography variant="body1">Last Name: {last}</Typography>
+                    <Typography variant="body1">Phone: {phone}</Typography>
+                    <Typography variant="body1">
+                      Address Line 1: {line}
+                    </Typography>
+                    <Typography variant="body1">
+                      Address Line 2: {line2}
+                    </Typography>
+                  </Box>
 
-                <Box sx={{ textAlign: "center", mt: 3 }}>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: "bold", color: "gray" }}
-                  >
-                    Personal Details
-                  </Typography>
-                  <Typography variant="body1">First Name: {first}</Typography>
-                  <Typography variant="body1">Last Name: {last}</Typography>
-                  <Typography variant="body1">Phone: {phone}</Typography>
-                  <Typography variant="body1">
-                    Address Line 1: {line}
-                  </Typography>
-                  <Typography variant="body1">
-                    Address Line 2: {line2}
-                  </Typography>
-                </Box>
-
-                <Box sx={{ textAlign: "center", mt: 3 }}>
-                  <Button onClick={() => setResetPwd(true)}>
-                    Reset Password
-                  </Button>
-                </Box>
-              </div>
-            )}
-          </div>
-        )}
-      </Container>
+                  <Box sx={{ textAlign: "center", mt: 3 }}>
+                    <Button onClick={() => setResetPwd(true)}>
+                      Reset Password
+                    </Button>
+                  </Box>
+                </div>
+              )}
+            </div>
+          )}
+        </Container>
+      </div>
     </>
   );
 };
