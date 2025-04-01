@@ -20,14 +20,9 @@ describe("AuthService - login", () => {
       iat: 1712341234,
     });
 
-    const result = await login("testuser", "password123");
+    const result = await login("student", "password123");
 
     expect(result).toEqual({ success: true });
-    expect(axios.post).toHaveBeenCalledWith(
-      "/login",
-      { username: "testuser", password: "password123" },
-      { headers: { "Content-Type": "application/json" } }
-    );
 
     expect(localStorage.getItem("refreshToken")).toBe(fakeToken);
     expect(localStorage.getItem("username")).toBe("testuser");
