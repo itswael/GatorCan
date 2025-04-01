@@ -9,6 +9,7 @@ import { useParams } from "react-router-dom";
 import { fetchCourse } from "../../../services/CourseService";
 import CourseNavbar from "./CourseNavbar";
 import "react-chat-widget/lib/styles.css";
+import ChatBox from "../../ChatBox";
 
 
 function CourseHome() {
@@ -53,6 +54,7 @@ Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit am
 
   return (
     <>
+    <ChatBox />
       <StudentNavbar />
       <div style={{ marginLeft: "100px" }}>
         <Box sx={{ display: "flex", height: "100vh" }}>
