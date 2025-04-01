@@ -1,12 +1,14 @@
-# 🏆 Sprint 2 - GatorCan
+# 🏆 Sprint 3 - GatorCan
 
-## 📅 Duration: [02/11/2025] - [03/03/2025]
+## 📅 Duration: [03/04/2025] - [03/31/2025]
 
 ## Visual Demo Links
-- [Sprint 2 Integrated Demo](https://drive.google.com/file/d/1D9-meydP8ja-mxD-ICXWkcSgtUs_fDTe/view?usp=drivesdk)
+- [Sprint 3 Integrated Demo](https://drive.google.com/file/d/1D9-meydP8ja-mxD-ICXWkcSgtUs_fDTe/view?usp=drivesdk)
+## API Documentation
+- [Backend API Documentation](https://github.com/itswael/GatorCan/blob/main/BackendAPIDocumentation.md)
 
 ## 🎯 Goal
-Build the course management system with admin-controlled enrollment approval and implement the weekly schedule feature. Ensure seamless integration between backend and frontend.
+Implement the assignment submission and grading system, integrate AWS S3 for file storage, and develop a real-time course messaging feature. Ensure seamless backend-frontend integration with robust testing.
 
 ---
 
@@ -14,29 +16,29 @@ Build the course management system with admin-controlled enrollment approval and
 
 ### **🔹 Backend (Mohammad & Muthu)**
 
-#### **1️⃣ Define Database Schema for Courses & Enrollments (Mohammad)**
+#### **1️⃣ Define Database Schema for Assignments & Submissions (Mohammad)**
 - **Who:** Backend Developers
-- **Why:** To store and manage course and enrollment data efficiently.
-- **What:** Implement schema for courses and enrollments, ensuring relationships are properly set up.
+- **Why:** To store and manage assignment details and student submissions.
+- **What:** Implement tables for assignments and submissions with necessary relationships.
 
-#### **2️⃣ Fetch Available Courses API (Mohammad)**
-- **Who:** All users
-- **Why:** To allow users to view available courses.
-- **What:** Implement `GET /courses` endpoint with pagination and error handling.
+#### **2️⃣ REST APIs for Fetching and Viewing Assignments (Mohammad)**
+- **Who:** Students, Instructors
+- **Why:** To allow students to access assignments and instructors to view submissions.
+- **What:** Implement `GET /assignments` (available assignments) and `GET /assignments/submitted` (submitted assignments).
 
-#### **3️⃣ Course Enrollment API with Admin Approval (Muthu)**
-- **Who:** Students (Request Enrollment), Admin (Approve/Reject)
-- **Why:** To manage course enrollments with an approval process.
-- **What:** Implement `POST /courses/enroll` with approval workflow and admin notifications.
+#### **3️⃣ File Upload for Assignment Submissions with AWS S3 (Muthu)**
+- **Who:** Students
+- **Why:** To enable students to submit assignments securely.
+- **What:** Integrate AWS S3 for secure file uploads and implement `POST /assignments/upload` API.
 
-#### **4️⃣ Fetch Enrolled Courses API (Muthu)**
-- **Who:** Enrolled Students
-- **Why:** To allow students to view their enrolled courses.
-- **What:** Implement `GET /courses/enrolled` to fetch only courses that the user is enrolled in.
+#### **4️⃣ Grading API for Instructors (Muthu)**
+- **Who:** Instructors
+- **Why:** To allow instructors to grade submissions.
+- **What:** Implement `POST /assignments/grade` API to update submission grades and feedback.
 
-#### **✅ Unit Tests and Functional tests for Backend (Mohamamd and Muthu)**
-##### Each of the test file covers all related functionalities
-##### Unit Tests
+#### **✅ Unit Tests and Functional Tests for Backend (Mohammad & Muthu)**
+##### **Unit Tests:**
+###### Sprint 2 Unit Tests
 - courseController -> Mocking courseService
     tests the controller functions like getCourse, getEnrolledCourse etc while integrated with the mocked service.
 - userController -> Mocking userService
@@ -45,106 +47,104 @@ Build the course management system with admin-controlled enrollment approval and
     tests the user service functions for implemented business logic for the functions like getUserDetails, login, updateUserDetails etc while integrated with the mocked reporsitories.
 - courseService -> Mocking userRepository, courseRepository
     tests the course service functions for implemented business logic for the functions like getCourse, getEnrolledCourse etc while integrated with the mocked reporsitories.
-##### Functonal Tests
-- get enrolled courses
-- enroll in_course
-- get courses
-- role based_access
-- user deletion
-- user details
-- user login
-- user registration
-- user update
+###### Sprint 3 Unit Tests
+- AssignmentController -> Mocking assignmentService
+  tests the controller functions like getAssignments, getAssignment etc while integrated with the mocked service.
+- SubmissionController -> Mocking submissionService
+  tests the controller functions like getsubmission, getSubmittedfiles etc while integrated with the mocked service.
+- AssignmentService -> Mocking assignmentRepository, userRepository
+  tests the user service functions for implemented business logic for the functions like getAssignments, getAssignment etc while integrated with the mocked reporsitories.
+- SubmissionService -> Mocking submissionRepository, userRepository
+  tests the user service functions for implemented business logic for the functions like getsubmission, getSubmittedfiles etc while integrated with the mocked reporsitories.
 
-** Tested using positive, Negative and edge test cases.
+##### **Functional Tests:**
+- Fetch assignments
+- Submit assignments
+- Grade assignments
+- Role-based access testing
+- Authentication & authorization testing
+
+**Tested using positive, negative, and edge test cases.**
+[Full Backend Test Log](https://github.com/itswael/GatorCan/blob/main/UnitTestLog.md)
 
 ---
 
 ### **🔹 Frontend (Navnit & Harsh)**
 
-#### **5️⃣ Course Listing Page UI (Navnit)**
-- **Who:** All users
-- **Why:** To allow users to browse available and enrolled courses.
-- **What:** Design and implement a page that fetches data from `GET /courses` and `GET /courses/enrolled` APIs.
+#### **5️⃣ Assignment Listing and Submission UI (Navnit)**
+- **Who:** Students
+- **Why:** To allow students to view and submit assignments.
+- **What:** Implement a UI fetching data from `GET /assignments` and allowing file uploads.
 
-#### **6️⃣ Course Enrollment Request Workflow (Navnit)**
-- **Who:** Students (Request Enrollment)
-- **Why:** To enable students to submit enrollment requests.
-- **What:** Implement a button to trigger `POST /courses/enroll` and display status updates.
+#### **6️⃣ Real-Time Messaging UI for Each Course (Navnit)**
+- **Who:** Students, Instructors
+- **Why:** To enable real-time discussions within courses.
+- **What:** Design a messaging UI for real-time chat within courses.
 
-#### **7️⃣ Weekly Schedule UI (Harsh)**
-- **Who:** Enrolled Students
-- **Why:** To display class timings and instructors based on enrolled courses.
-- **What:** Design a UI showing a structured weekly schedule with course details.
+#### **7️⃣ WebSocket Integration for Real-Time Messaging (Harsh)**
+- **Who:** Students, Instructors
+- **Why:** To support real-time communication.
+- **What:** Implement WebSocket connection for live messaging.
 
-#### **8️⃣ Backend API Integration for Courses & Schedule (Harsh)**
-- **Who:** Frontend Developers
-- **Why:** To connect UI components with backend functionality.
-- **What:** Implement API calls to `GET /courses` and `GET /courses/enrolled` to dynamically populate the UI.
+#### **8️⃣ Display Graded Assignments and Feedback (Harsh)**
+- **Who:** Students
+- **Why:** To allow students to see graded submissions.
+- **What:** Implement UI to display assignment grades and instructor feedback.
 
-#### **✅ Unit Tests and Cypress Test for Frontend (Harsh and Navnit)**
-Cypress tests:
-- fetch and validate login page
-- validate the components in the login page
-- pass in creds and click on login button
-- fetch and validate dashboard page
+#### **✅ Unit Tests and Cypress Test for Frontend (Navnit & Harsh)**
+##### **Cypress Tests:**
+- Fetch and validate assignments page
+- Submit assignments and check file upload
+- Fetch and validate real-time messages
+- Test role-based UI components
 
-Unit Tests:
-- Login:
-    1. Check if username and password are rendered correctly 
-    2. Check if we are able to change username and password correctly 
-    3. Check if we get an error message on passing invalid credentials 
-- AdminDashboard:
-    1. Check if add user tool renders correctly 
-- StudentCourses:
-    1. Check if enrolled courses and all courses heading is rendered properly 
-    2. Check if after fetch all courses API runs (mock), it loads the courses onto the courses tab
-    3. Check if "No enrolled courses" text renders if there are no courses enrolled by the student 
-- StudentNavbar:
-    1. Check if all Navbar components are rendered such as Profile, Calendar etc 
-- AdminDashboard:
-    1. Check if mock add user API gives correct success or failure responses
-- AuthService:
-    1. Check if mock login API gives correct success or failure response, and if local storage is updated with refresh token correctly 
-- CourseService:
-    1. Check if fetch all courses API gives correct success or failure responses.
-- UserNavigation:
-    1. Check if all elements are rendered correctly 
-    2. Check if mock add user API gives correct display message on success or failure
+##### **Unit Tests:**
+- AssignmentList:
+  - Verify assignments load correctly
+  - Check error handling on failed API calls
+- SubmissionForm:
+  - Validate file upload restrictions
+  - Mock successful/failed submissions
+- MessagingComponent:
+  - Verify real-time messages appear instantly
+  - Simulate WebSocket disconnection and reconnection handling
+- GradingView:
+  - Ensure grades and feedback render correctly
+  - Mock API responses for feedback retrieval
 
 ---
 
-## ⚙️ **Sprint 2 - Issues & Completion Status**
+## ⚙️ **Sprint 3 - Issues & Completion Status**
 ### **Planned Issues:**
-- Define and implement database schema
-- Develop course-related API endpoints
-- Design and build frontend course management UI
-- Implement admin-controlled enrollment approval system
-- Develop and integrate weekly schedule UI
+- Define and implement assignment database schema
+- Develop REST APIs for assignments and submissions
+- Implement AWS S3 file storage integration
+- Build UI for assignment submissions and grading
+- Implement real-time messaging with WebSocket(Localized, early stage)
+- Conduct unit and functional testing
 
 ### **Successfully Completed:** ✅ All planned issues were completed.
 
 ---
 
 ## 🚀 Outcome
-By the end of Sprint 2, we have:
-- ✅ Everything from Sprint 1
-- ✅ Database schema for courses and enrollments
-- ✅ API endpoints for course listing, enrollment, and approval workflow
-- ✅ Course listing and enrollment UI
-- ✅ Weekly schedule UI displaying enrolled courses and instructors
-- ✅ Backend-frontend API integration
-- ✅ Unit tests and Cypress tests for backend and frontend
+By the end of Sprint 3, we have:
+- ✅ Database schema for assignments and submissions
+- ✅ APIs for fetching, submitting, and grading assignments
+- ✅ AWS S3 integration for file storage
+- ✅ UI for assignment submissions and grading
+- ✅ Real-time messaging via WebSocket (early stage)
+- ✅ Comprehensive unit and functional tests for both backend and frontend
 
 ---
 
 ## 💚 Notes & Discussions
-- [ ] Optimize database queries for large-scale course enrollments
-- [ ] Improve UI responsiveness for weekly schedule
-- [ ] Discuss potential enhancements for real-time notifications
-- [ ] Plan for next sprint (Messaging System & Notifications)
+- [ ] Optimize WebSocket performance for high-traffic messaging
+- [ ] Improve UI error handling for file uploads
+- [ ] Enhance grading UI with filtering and sorting options
+- [ ] Plan for next sprint (User Notifications & Advanced Course Analytics)
 
 ---
 
-### 🔥 Sprint 2 Successfully Completed! 🚀
+### 🔥 Sprint 3 Successfully Completed! 🚀
 
