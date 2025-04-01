@@ -99,18 +99,83 @@ Implement the assignment submission and grading system, integrate AWS S3 for fil
 - Test role-based UI components
 
 ##### **Unit Tests:**
-- AssignmentList:
-  - Verify assignments load correctly
-  - Check error handling on failed API calls
-- SubmissionForm:
-  - Validate file upload restrictions
-  - Mock successful/failed submissions
-- MessagingComponent:
-  - Verify real-time messages appear instantly
-  - Simulate WebSocket disconnection and reconnection handling
-- GradingView:
-  - Ensure grades and feedback render correctly
-  - Mock API responses for feedback retrieval
+- **Sprint 2 Tests:**
+  - Login:
+    - Check if username and password are rendered correctly
+    - Check if we are able to change username and password correctly
+    - Check if we get an error message on passing invalid credentials
+
+  - AdminDashboard:
+    - Check if add user tool renders correctly
+
+  - StudentCourses:
+    - Check if enrolled courses and all courses heading is rendered properly
+    - Check if after fetch all courses API runs (mock), it loads the courses onto the courses tab
+    - Check if "No enrolled courses" text renders if there are no courses enrolled by the student
+
+  - StudentNavbar:
+    - Check if all Navbar components are rendered such as Profile, Calendar, etc.
+
+  - AdminDashboard:
+    - Check if mock add user API gives correct success or failure responses
+
+  - AuthService:
+    - Check if mock login API gives correct success or failure response, and if local storage is updated with refresh token correctly
+
+  - CourseService:
+    - Check if fetch all courses API gives correct success or failure responses
+
+  - UserNavigation:
+    - Check if all elements are rendered correctly
+    - Check if mock add user API gives correct display message on success or failure
+
+---
+
+- **Sprint 3 Tests:**
+  - AdminDashboard:
+    - Successfully adds a user
+    - Successfully deletes a user
+    - Successfully updates a user
+
+  - StudentCourses:
+    - Successfully fetches a course
+    - Successfully fetches course assignments
+    - Successfully fetches assignment details
+
+  - AuthService:
+    - Successfully gets user details
+    - Successfully resets password
+
+  - CourseService:
+    - FetchCourse - Successfully fetches a course
+    - FetchAssignments - Successfully fetches course assignments
+    - FetchAssignmentDetails - Successfully fetches assignment details
+
+  - UserNavigation:
+    - Successfully adds a user
+    - Successfully deletes a user
+    - Successfully updates a user
+
+  - ChatBox:
+    - Should toggle chat window, send message, and scroll to the latest message
+
+  - UserService:
+    - Successfully gets user details
+    - Successfully resets password
+
+  - StudentProfile:
+    - Displays user details after fetching
+    - Shows loading indicator when fetching user details
+
+  - CourseAssignments:
+    - Should display 'Upcoming Assignments' and 'Past Assignments' text
+    - Should fetch assignments data
+
+  - CourseGrades:
+    - Fetches assignments and displays total row
+
+  - CourseHome:
+    - Displays 'Home' text in the document
 
 ---
 
