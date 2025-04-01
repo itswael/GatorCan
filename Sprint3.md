@@ -3,7 +3,7 @@
 ## 📅 Duration: [03/04/2025] - [03/31/2025]
 
 ## Visual Demo Links
-- [Sprint 3 Integrated Demo](https://drive.google.com/file/d/1D9-meydP8ja-mxD-ICXWkcSgtUs_fDTe/view?usp=drivesdk)
+- [Sprint 3 Integrated Demo](https://drive.google.com/file/d/1nz1pBu1L1eCL7OnUPgYRo8zwy-cdHaDi/view?usp=sharing)
 ## API Documentation
 - [Backend API Documentation](https://github.com/itswael/GatorCan/blob/main/BackendAPIDocumentation.md)
 
