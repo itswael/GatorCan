@@ -57,7 +57,7 @@ function MyListItem({ icon, name, path, handleNavigate }) {
       <ClickAwayListener onClickAway={handleClose}>
         <Box sx={{ position: "relative", width: "100%", overflow: "visible" }}>
           <ListItem
-            button
+            button={true}
             sx={{
               flexDirection: "column",
               alignItems: "center",
@@ -91,7 +91,7 @@ function MyListItem({ icon, name, path, handleNavigate }) {
               }}
             >
               <h3>All Courses</h3>
-              <hr/>
+              <hr />
               <List>
                 {loadingEnrolledCourses ? (
                   <ListItem>
@@ -110,7 +110,7 @@ function MyListItem({ icon, name, path, handleNavigate }) {
                 ) : (
                   enrolledCourses.map((course, index) => (
                     <ListItem
-                      button
+                      button={true}
                       key={index}
                       onClick={() =>
                         handleNavigate(`/student-course/${course.id}`)
@@ -125,7 +125,7 @@ function MyListItem({ icon, name, path, handleNavigate }) {
                 )}
                 <hr />
                 <ListItem
-                  button
+                  button={true}
                   onClick={() => handleNavigate("/student-courses")}
                 >
                   <ListItemText
@@ -142,7 +142,7 @@ function MyListItem({ icon, name, path, handleNavigate }) {
   } else {
     return (
       <ListItem
-        button
+        button={true}
         sx={{ flexDirection: "column", alignItems: "center" }}
         onClick={() => handleNavigate(path)}
       >
@@ -166,12 +166,12 @@ function MyListItem({ icon, name, path, handleNavigate }) {
 
 function StudentNavbar() {
 
-    const handleLogout = () => {
+  const navigate = useNavigate();  
+  
+  const handleLogout = () => {
       localStorage.clear();
       navigate("/login", { replace: true });
     };
-
-    const navigate = useNavigate();
 
     const handleNavigate = (path) => {
       navigate(path, { replace: false });
@@ -203,7 +203,7 @@ function StudentNavbar() {
     >
       <Box sx={{ flexGrow: 1 }}>
         <List>
-          <ListItem button>
+          <ListItem button={true}>
             <ListItemText primary="GatorCan" />
           </ListItem>
           <MyListItem
@@ -253,7 +253,7 @@ function StudentNavbar() {
 
       <List>
         <ListItem
-          button
+          button={true}
           sx={{ flexDirection: "column", alignItems: "center" }}
           onClick={handleLogout} // Handle click event
         >
