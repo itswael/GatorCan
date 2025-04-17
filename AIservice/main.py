@@ -5,6 +5,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+import re
 
 app = FastAPI()
 
@@ -24,6 +25,10 @@ tfidf_matrix = tfidf.fit_transform(courses["tags"])
 class Input(BaseModel):
     enrolled_ids: List[int]
     keywords: List[str]
+
+class TextRequest(BaseModel):
+    text: str
+    sentences_count: int = 3
 
 @app.post("/recommend")
 def recommend(input: Input):
@@ -55,3 +60,39 @@ def recommend(input: Input):
     top = remaining.sort_values("score", ascending=False).head(3)
 
     return {"recommendations": top[["id", "title", "tags"]].to_dict(orient="records")}
+
+
+@app.post("/summarize")
+async def smart_summarize(request: TextRequest):
+    summary = smart_summarizer(request.text, request.sentences_count)
+    return {"summary": summary}
+
+def smart_summarizer(text, sentences_count=3):
+    # Clean and split into sentences
+    sentences = re.split(r'(?<=[.!?]) +', text)
+    if len(sentences) <= sentences_count:
+        return text
+
+    # Vectorize the sentences
+    vectorizer = TfidfVectorizer(stop_words='english')
+    tfidf_matrix = vectorizer.fit_transform(sentences)
+
+    # Calculate cosine similarity between sentences
+    similarity_matrix = cosine_similarity(tfidf_matrix)
+
+    # Sentence scores: sum of cosine similarities with other sentences
+    sentence_scores = similarity_matrix.sum(axis=1)
+
+    # Boost scores for sentences that have more unique important words
+    important_words = vectorizer.get_feature_names_out()
+    for idx, sentence in enumerate(sentences):
+        word_count = sum(1 for word in important_words if word.lower() in sentence.lower())
+        sentence_scores[idx] += 0.1 * word_count  # Small boost
+
+    # Pick top sentences
+    ranked_sentences_idx = np.argsort(sentence_scores)[-sentences_count:]
+    ranked_sentences_idx = sorted(ranked_sentences_idx)
+
+    # Build final summary
+    summary = ' '.join([sentences[i] for i in ranked_sentences_idx])
+    return summary.strip()
