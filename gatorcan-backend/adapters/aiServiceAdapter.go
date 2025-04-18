@@ -70,9 +70,8 @@ func GetRecommendedCourses(enrolled []int, interests []string, logger *log.Logge
 	return recommendations, nil
 }
 
-func GetSummary(text string, logger *log.Logger) (dtos.TextSummaryResponseDTO, error) {
+func GetSummary(input *dtos.TextSummaryRequestDTO, logger *log.Logger) (dtos.TextSummaryResponseDTO, error) {
 	var summary dtos.TextSummaryResponseDTO
-	input := dtos.TextSummaryRequestDTO{Text: text}
 	jsonData, err := json.Marshal(input)
 	if err != nil {
 		logger.Printf("failed to marshal request: %v", err)
