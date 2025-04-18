@@ -52,3 +52,13 @@ func (s *AiServiceServiceImpl) GetCourseRecommendations(ctx context.Context, log
 
 	return courseRecommendations, nil
 }
+
+func (s *AiServiceServiceImpl) GetTextSummary(ctx context.Context, logger *log.Logger, textSummaryRequest *dtos.TextSummaryRequestDTO) (*dtos.TextSummaryResponseDTO, error) {
+	summary, err := adapters.GetSummary(textSummaryRequest, logger)
+	if err != nil {
+		logger.Printf("failed to call AI service: %v", err)
+		return nil, errors.ErrMicroserviceError
+	}
+
+	return &summary, nil
+}
