@@ -76,3 +76,8 @@ type SubmissionService interface {
 	GradeSubmission(ctx context.Context, logger *log.Logger, username string, submissionData *dtos.GradeSubmissionRequestDTO) (*dtos.GradeSubmissionResponseDTO, error)
 	GetSubmission(ctx context.Context, courseID int, assignmentID int, userID uint) (*dtos.SubmissionResponseDTO, error)
 }
+
+type AiServiceService interface {
+	GetCourseRecommendations(ctx context.Context, logger *log.Logger, username string) ([]dtos.CourseRecommendationResponseDTO, error)
+	GetTextSummary(ctx context.Context, logger *log.Logger, textSummaryRequest *dtos.TextSummaryRequestDTO) (*dtos.TextSummaryResponseDTO, error)
+}

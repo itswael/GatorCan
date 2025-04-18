@@ -7,7 +7,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 import re
 
-app = FastAPI()
+app = FastAPI(debug=True)
 
 # Mock DB (replace with actual DB or file later)
 courses = pd.DataFrame([
@@ -32,8 +32,11 @@ class TextRequest(BaseModel):
 
 @app.post("/recommend")
 def recommend(input: Input):
+    print(input.enrolled_ids)
     enrolled = courses[courses["id"].isin(input.enrolled_ids)]
+    print(enrolled)
     if enrolled.empty:
+        print("Enrolled courses are empty")
         return {"recommendations": []}
 
     # Vector for enrolled courses
@@ -47,9 +50,12 @@ def recommend(input: Input):
     remaining = courses[~courses["id"].isin(input.enrolled_ids)]
     if input.keywords:
         keyword_str = " ".join(input.keywords)
-        remaining = remaining[remaining["tags"].str.contains("|".join(input.keywords), case=False)]
+        courses_based_on_search = remaining[remaining["tags"].str.contains("|".join(input.keywords), case=False)]
+        if not courses_based_on_search.empty:
+            remaining = courses_based_on_search.copy()
 
     if remaining.empty:
+        print("No remaining courses after filtering")
         return {"recommendations": []}
 
     remaining_vecs = tfidf.transform(remaining["tags"])
@@ -58,18 +64,20 @@ def recommend(input: Input):
 
     remaining["score"] = similarities
     top = remaining.sort_values("score", ascending=False).head(3)
+    print(top)
 
     return {"recommendations": top[["id", "title", "tags"]].to_dict(orient="records")}
 
 
 @app.post("/summarize")
 async def smart_summarize(request: TextRequest):
-    summary = smart_summarizer(request.text, request.sentences_count)
+    summary = smart_summarizer(request.text)
     return {"summary": summary}
 
-def smart_summarizer(text, sentences_count=3):
+def smart_summarizer(text):
     # Clean and split into sentences
     sentences = re.split(r'(?<=[.!?]) +', text)
+    sentences_count = len(sentences) // 3 + 1
     if len(sentences) <= sentences_count:
         return text
 
