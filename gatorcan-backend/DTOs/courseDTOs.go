@@ -43,3 +43,22 @@ type EnrollRequestDTO struct {
 type EnrollmentResponseDTO struct {
 	Message string `json:"message"` // Success message
 }
+
+type CourseRecommendationRequestDTO struct {
+	EnrolledIDs []int    `json:"enrolled_ids"`
+	Keywords    []string `json:"keywords"`
+}
+
+type CourseRecommendationResponseDTO struct {
+	Id    int    `json:"id"`
+	Title string `json:"title"`
+	Tags  string `json:"tags"`
+}
+
+type TextSummaryRequestDTO struct {
+	Text string `json:"text"`
+}
+
+type TextSummaryResponseDTO struct {
+	Summary string `json:"summary"`
+}
