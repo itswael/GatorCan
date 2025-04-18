@@ -1,7 +1,8 @@
 package utils
 
 import (
-	"context"
+	"fmt"
+	dtos "gatorcan-backend/DTOs"
 	"gatorcan-backend/config"
 	"log"
 	"os"
@@ -9,27 +10,24 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func testsns() {
-	// Set up logging
-	logger := log.New(os.Stdout, "[SNS Test] ", log.LstdFlags)
-
-	env_err := godotenv.Load()
-	if env_err != nil {
-		log.Fatalf("Error loading .env file: %v", env_err)
+func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("error loading .env: %v", err)
 	}
 
-	// Load config from environment
+	logger := log.New(os.Stdout, "[SNS Test] ", log.LstdFlags)
 	cfg := config.LoadConfig()
 
-	// Test message and subject
-	message := "Hello from Go SNS test! 🚀"
-	subject := "SNS Test Subject"
-
-	// Publish SNS message
-	err := PublishSNSMessage(context.Background(), logger, cfg, message, subject)
-	if err != nil {
-		logger.Fatalf("Failed to publish SNS message: %v", err)
+	input := dtos.SNSMessageDTO{
+		Message: "This is a test SNS message from adapter ✉️",
+		Subject: "Test SNS Subject",
 	}
 
-	logger.Println("✅ SNS message published successfully!")
+	fmt.Printf("cfg.SNSConfig: %v\n", cfg.SNSConfig)
+	fmt.Printf("Input: %+v\n", input)
+	fmt.Printf("Logger: %v\n", logger)
+	// if err := adapters.PublishSNSMessage(context.Background(), logger, cfg, input); err != nil {
+	// 	logger.Fatalf("❌ Failed to publish SNS message: %v", err)
+	// }
 }
