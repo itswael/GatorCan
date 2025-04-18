@@ -77,6 +77,10 @@ func UserRoutes(userController *controllers.UserController,
 			aiserviceController.GetCourseRecommendations(c)
 		})
 
+		courseGroup.POST("/summarize", func(c *gin.Context) {
+			aiserviceController.GetTextSummary(c)
+		})
+
 		courseGroup.GET("/:cid", func(c *gin.Context) {
 			courseController.GetCourse(c)
 		})
