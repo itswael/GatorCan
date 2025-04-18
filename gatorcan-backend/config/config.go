@@ -37,6 +37,15 @@ type AppConfig struct {
 	Server              ServerConfig
 	CORS                CORSConfig
 	NotificationWebhook NotificationWebhook
+	SNSConfig           SNSConfig
+}
+
+type SNSConfig struct {
+	Region          string
+	AccessKeyID     string
+	SecretAccessKey string
+	SessionToken    string
+	TopicARN        string
 }
 
 func LoadConfig() *AppConfig {
@@ -62,6 +71,13 @@ func LoadConfig() *AppConfig {
 		NotificationWebhook: NotificationWebhook{
 			URL:    getEnvOrDefault("NOTIFICATION_WEBHOOK_URL", ""),
 			RoleID: getEnvOrDefault("NOTIFICATION_ROLE_ID", ""),
+		},
+		SNSConfig: SNSConfig{
+			Region:          getEnvOrDefault("AWS_REGION", ""),
+			AccessKeyID:     getEnvOrDefault("AWS_ACCESS_KEY_ID", ""),
+			SecretAccessKey: getEnvOrDefault("AWS_SECRET_ACCESS_KEY", ""),
+			SessionToken:    getEnvOrDefault("AWS_SESSION_TOKEN", ""),
+			TopicARN:        getEnvOrDefault("AWS_TOPIC_ARN", ""),
 		},
 	}
 }
