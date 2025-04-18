@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 )
 
@@ -21,6 +22,11 @@ func main() {
 	logger := utils.Log()
 
 	logger.Println("Application started")
+
+	env_err := godotenv.Load()
+	if env_err != nil {
+		logger.Fatalf("Error loading .env file: %v", env_err)
+	}
 
 	// Load configuration
 	appConfig := config.LoadConfig()
