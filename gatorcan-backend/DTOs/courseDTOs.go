@@ -54,3 +54,11 @@ type CourseRecommendationResponseDTO struct {
 	Title string `json:"title"`
 	Tags  string `json:"tags"`
 }
+
+type TextSummaryRequestDTO struct {
+	Text string `json:"text"`
+}
+
+type TextSummaryResponseDTO struct {
+	Summary string `json:"summary"`
+}
