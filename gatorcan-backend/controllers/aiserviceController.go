@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"gatorcan-backend/DTOs"
 	"gatorcan-backend/errors"
 	"gatorcan-backend/interfaces"
 	"log"
@@ -57,4 +58,30 @@ func (ac *AIServiceController) GetCourseRecommendations(c *gin.Context) {
 
 	// Return the course recommendations as JSON response
 	c.JSON(http.StatusOK, courseRecommendations)
+}
+
+func (ac *AIServiceController) GetTextSummary(c *gin.Context) {
+	ac.logger.Printf("Request: %s %s", c.Request.Method, c.Request.URL.Path)
+
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	var textSummaryRequest dtos.TextSummaryRequestDTO
+	if err := c.ShouldBindJSON(&textSummaryRequest); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	// Call the service layer to fetch text summary
+	textSummary, err := ac.aiServiceService.GetTextSummary(ctx, ac.logger, &textSummaryRequest)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.ErrMicroserviceDown.Error()})
+		ac.logger.Printf("error getting text summary: %v", err)
+		// c.JSON(http.StatusInternalServerError, gin.H{"error": errors.ErrMicroserviceDown})
+		return
+	}
+
+	// Return the text summary as JSON response
+	c.JSON(http.StatusOK, textSummary)
 }
