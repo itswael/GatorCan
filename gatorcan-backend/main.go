@@ -76,12 +76,14 @@ func main() {
 	courseService := services.NewCourseService(courseRepo, userRepo, appConfig, httpClient)
 	assignmentService := services.NewAssignmentService(assignmentRepo, userRepo, courseRepo, appConfig, httpClient)
 	submissionService := services.NewSubmissionService(submissionRepo, assignmentRepo, userRepo, courseRepo, appConfig, httpClient)
+	aiserviceService := services.NewAIServiceService(courseRepo, userRepo, appConfig, httpClient)
 
 	// Initialize controllers
 	userController := controllers.NewUserController(userService, logger)
 	courseController := controllers.NewCourseController(courseService, logger)
 	assignmentController := controllers.NewAssignmentController(assignmentService, logger)
 	submissionController := controllers.NewSubmissionController(submissionService, userService, logger)
+	aiserviceController := controllers.NewAIServiceController(aiserviceService, logger)
 
 	// Set up router
 	router := gin.Default()
@@ -92,6 +94,7 @@ func main() {
 		courseController,
 		assignmentController,
 		submissionController,
+		aiserviceController,
 		router,
 		logger)
 
