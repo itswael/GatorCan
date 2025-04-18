@@ -69,3 +69,37 @@ func GetRecommendedCourses(enrolled []int, interests []string, logger *log.Logge
 
 	return recommendations, nil
 }
+
+func GetSummary(text string, logger *log.Logger) (dtos.TextSummaryResponseDTO, error) {
+	var summary dtos.TextSummaryResponseDTO
+	input := dtos.TextSummaryRequestDTO{Text: text}
+	jsonData, err := json.Marshal(input)
+	if err != nil {
+		logger.Printf("failed to marshal request: %v", err)
+		return summary, errors.ErrMicroserviceError
+	}
+
+	resp, err := http.Post("http://localhost:8000/summarize", "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		logger.Printf("failed to send request to recommendation service: %v", err)
+		return summary, errors.ErrMicroserviceError
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return summary, errors.ErrMicroserviceError
+	}
+
+	var responseData struct {
+		Summary string `json:"summary"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&responseData); err != nil {
+		logger.Printf("failed to decode response from recommendation service: %v", err)
+		return summary, errors.ErrMicroserviceError
+	}
+
+	summary.Summary = responseData.Summary
+
+	return summary, nil
+}
