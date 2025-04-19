@@ -87,10 +87,11 @@ func TestGetAssignments(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup mock service
 			mockService := new(mocks.MockAssignmentService)
+			mockAwsService := new(mocks.MockAWSService)
 			tc.setupMock(mockService)
 
 			// Create controller
-			assignmentController := controllers.NewAssignmentController(mockService, logger)
+			assignmentController := controllers.NewAssignmentController(mockService, mockAwsService, logger)
 
 			// Setup HTTP request context
 			w := httptest.NewRecorder()
@@ -184,10 +185,11 @@ func TestGetAssignment(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup mock service
 			mockService := new(mocks.MockAssignmentService)
+			mockAwsService := new(mocks.MockAWSService)
 			tc.setupMock(mockService)
 
 			// Create controller
-			assignmentController := controllers.NewAssignmentController(mockService, logger)
+			assignmentController := controllers.NewAssignmentController(mockService, mockAwsService, logger)
 
 			// Setup HTTP request context
 			w := httptest.NewRecorder()
@@ -317,10 +319,11 @@ func TestUploadFileToAssignment(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// Setup mock service
 			mockService := new(mocks.MockAssignmentService)
+			mockAwsService := new(mocks.MockAWSService)
 			tc.setupMock(mockService)
 
 			// Create controller
-			assignmentController := controllers.NewAssignmentController(mockService, logger)
+			assignmentController := controllers.NewAssignmentController(mockService, mockAwsService, logger)
 
 			// Setup HTTP request context
 			w := httptest.NewRecorder()
