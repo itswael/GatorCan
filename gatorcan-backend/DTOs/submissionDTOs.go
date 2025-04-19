@@ -22,17 +22,16 @@ type SubmissionRequestDTO struct {
 }
 
 type GradeResponseDTO struct {
-	ID          uint      `gorm:"primaryKey" json:"id"`
-	Title       string    `gorm:"not null" json:"title"`
-	Grade       int       `json:"grade"`
-	MaxPoints   int       `json:"max_points"`
-	SubmittedAt time.Time `json:"date_of_submission"`
-	Feedback    string    `json:"feedback"`
-	Deadline    time.Time `json:"deadline"`
-	Mean        float64   `json:"mean"`
-	Median      float64   `json:"median"`
-	Highest     float64   `json:"highest"`
-	Lowest      float64   `json:"lowest"`
+	AssignmentID uint      `gorm:"primaryKey" json:"assignment_id"`
+	Title        string    `gorm:"not null" json:"title"`
+	Grade        int       `json:"grade"`
+	MaxPoints    int       `json:"max_points"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	Feedback     string    `json:"feedback"`
+	Deadline     time.Time `json:"deadline"`
+	Max          int       `json:"max"`
+	Min          int       `json:"min"`
+	Mean         float64   `json:"mean"`
 }
 
 func NewSubmissionRequestDTO(assignmentID uint, fileURL, fileName, fileType string) *SubmissionRequestDTO {
