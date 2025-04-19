@@ -9,4 +9,5 @@ var (
 	ErrFailedToEnroll  = errors.New("failed to request enrollment")
 	ErrCourseInactive  = errors.New("course is not active")
 	ErrFailedToFetch   = errors.New("failed to fetch courses")
+	ErrInvalidCourseID = errors.New("invalid course ID")
 )

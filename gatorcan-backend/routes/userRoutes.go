@@ -88,6 +88,11 @@ func UserRoutes(userController *controllers.UserController,
 		courseGroup.GET("/:cid", func(c *gin.Context) {
 			courseController.GetCourse(c)
 		})
+
+		courseGroup.GET("/:cid/grades", func(c *gin.Context) {
+			submissionController.GetGrades(c)
+		})
+
 		assignmentGroup := courseGroup.Group("/:cid/assignments")
 		assignmentGroup.Use(middleware.AuthMiddleware(logger, string(models.Student), string(models.Instructor), string(models.TA)))
 		{
