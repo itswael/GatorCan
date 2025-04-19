@@ -22,3 +22,19 @@ type AssignmentResponseDTO struct {
 	ActiveCourseID uint      `json:"course_id"`
 	MaxPoints      int       `json:"max_points"`
 }
+
+type CreateAssignmentRequestDTO struct {
+	Title       string    `json:"title" binding:"required"`
+	Description string    `json:"description"`
+	Deadline    time.Time `json:"deadline"`
+	MaxPoints   int       `json:"max_points"`
+	CourseID    uint      `json:"course_id"`
+}
+
+type UpdateAssignmentRequestDTO struct {
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Deadline    time.Time `json:"deadline"`
+	MaxPoints   int       `json:"max_points"`
+	CourseID    uint      `json:"course_id"`
+}

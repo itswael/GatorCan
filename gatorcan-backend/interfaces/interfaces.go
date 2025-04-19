@@ -59,12 +59,14 @@ type AssignmentRepository interface {
 	UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error)
 	CreateAssignmentFile(ctx context.Context, assignmentFile *models.AssignmentFile) error
 	LinkUserToAssignmentFile(ctx context.Context, userAssignmentFile *models.UserAssignmentFile) error
+	UpsertAssignment(ctx context.Context, assignment *models.Assignment) error
 }
 
 type AssignmentService interface {
 	GetAssignmentsByCourseID(ctx context.Context, courseID int) ([]dtos.AssignmentResponseDTO, error)
 	GetAssignmentByIDAndCourseID(ctx context.Context, assignmentID int, courseID int) (dtos.AssignmentResponseDTO, error)
 	UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error)
+	UpsertAssignment(ctx context.Context, logger *log.Logger, assignment *dtos.CreateAssignmentRequestDTO) (dtos.AssignmentResponseDTO, error)
 }
 
 type SubmissionRepository interface {

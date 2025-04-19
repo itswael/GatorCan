@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type AssignmentRepository interface {
@@ -16,6 +17,7 @@ type AssignmentRepository interface {
 	UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error)
 	CreateAssignmentFile(ctx context.Context, assignmentFile *models.AssignmentFile) error
 	LinkUserToAssignmentFile(ctx context.Context, userAssignmentFile *models.UserAssignmentFile) error
+	UpsertAssignment(ctx context.Context, assignment *models.Assignment) error
 }
 
 type assignmentRepository struct {
@@ -103,6 +105,15 @@ func (a *assignmentRepository) CreateAssignmentFile(ctx context.Context, assignm
 func (a *assignmentRepository) LinkUserToAssignmentFile(ctx context.Context, userAssignmentFile *models.UserAssignmentFile) error {
 	if err := a.db.WithContext(ctx).Create(userAssignmentFile).Error; err != nil {
 		return errors.ErrFailedToLinkFileToUser
+	}
+	return nil
+}
+
+func (a *assignmentRepository) UpsertAssignment(ctx context.Context, assignment *models.Assignment) error {
+	if err := a.db.WithContext(ctx).Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(assignment).Error; err != nil {
+		return errors.ErrFailedToCreateAssignment
 	}
 	return nil
 }

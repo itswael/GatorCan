@@ -112,3 +112,39 @@ func (s *AssignmentService) UploadFileToAssignment(ctx context.Context, logger *
 
 	return response, nil
 }
+
+func (s *AssignmentService) UpsertAssignment(ctx context.Context, logger *log.Logger, assignment *dtos.CreateAssignmentRequestDTO) (dtos.AssignmentResponseDTO, error) {
+	// Check if the course exists
+	_, err := s.courseRepo.GetCourseByID(ctx, int(assignment.CourseID))
+	if err != nil {
+		logger.Printf("course not found: %d %d", assignment.CourseID, 404)
+		return dtos.AssignmentResponseDTO{}, errors.ErrCourseNotFound
+	}
+
+	// Create the assignment model
+	assignmentModel := models.Assignment{
+		Title:          assignment.Title,
+		Description:    assignment.Description,
+		Deadline:       assignment.Deadline,
+		ActiveCourseID: assignment.CourseID,
+		MaxPoints:      assignment.MaxPoints,
+	}
+
+	// Call the repository to create the assignment
+	if err := s.assignmentRepo.UpsertAssignment(ctx, &assignmentModel); err != nil {
+		logger.Printf("failed to create assignment: %v", err)
+		return dtos.AssignmentResponseDTO{}, errors.ErrFailedToCreateAssignment
+	}
+
+	// Convert to response DTO
+	assignmentResponse := dtos.AssignmentResponseDTO{
+		ID:             assignmentModel.ID,
+		Title:          assignmentModel.Title,
+		Description:    assignmentModel.Description,
+		Deadline:       assignmentModel.Deadline,
+		ActiveCourseID: assignmentModel.ActiveCourseID,
+		MaxPoints:      assignmentModel.MaxPoints,
+	}
+
+	return assignmentResponse, nil
+}
