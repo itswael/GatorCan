@@ -165,7 +165,7 @@ func (sc *SubmissionController) GetGrades(c *gin.Context) {
 		return
 	}
 
-	grades, err := sc.submissionService.GetGrades(ctx, courseID, user.ID)
+	grades, err := sc.submissionService.GetGrades(ctx, sc.logger, courseID, user.ID)
 	if err == errors.ErrSubmissionNotFound {
 		c.JSON(http.StatusNotFound, gin.H{"error": errors.ErrSubmissionNotFound.Error()})
 		return
