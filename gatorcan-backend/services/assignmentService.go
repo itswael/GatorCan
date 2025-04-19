@@ -113,38 +113,33 @@ func (s *AssignmentService) UploadFileToAssignment(ctx context.Context, logger *
 	return response, nil
 }
 
-func (s *AssignmentService) UpsertAssignment(ctx context.Context, logger *log.Logger, assignment *dtos.CreateAssignmentRequestDTO) (dtos.AssignmentResponseDTO, error) {
-	// Check if the course exists
-	_, err := s.courseRepo.GetCourseByID(ctx, int(assignment.CourseID))
+func (s *AssignmentService) UpsertAssignment(ctx context.Context, logger *log.Logger, input *dtos.CreateOrUpdateAssignmentRequestDTO) (dtos.AssignmentResponseDTO, error) {
+
+	_, err := s.courseRepo.GetCourseByID(ctx, int(input.CourseID))
 	if err != nil {
-		logger.Printf("course not found: %d %d", assignment.CourseID, 404)
 		return dtos.AssignmentResponseDTO{}, errors.ErrCourseNotFound
 	}
 
-	// Create the assignment model
-	assignmentModel := models.Assignment{
-		Title:          assignment.Title,
-		Description:    assignment.Description,
-		Deadline:       assignment.Deadline,
-		ActiveCourseID: assignment.CourseID,
-		MaxPoints:      assignment.MaxPoints,
+	model := models.Assignment{
+		ID:             input.ID, // 0 if creating
+		Title:          input.Title,
+		Description:    input.Description,
+		Deadline:       input.Deadline,
+		ActiveCourseID: input.CourseID,
+		MaxPoints:      input.MaxPoints,
 	}
 
-	// Call the repository to create the assignment
-	if err := s.assignmentRepo.UpsertAssignment(ctx, &assignmentModel); err != nil {
-		logger.Printf("failed to create assignment: %v", err)
-		return dtos.AssignmentResponseDTO{}, errors.ErrFailedToCreateAssignment
+	if err := s.assignmentRepo.UpsertAssignment(ctx, &model); err != nil {
+		logger.Printf("Upsert failed: %v", err)
+		return dtos.AssignmentResponseDTO{}, err
 	}
 
-	// Convert to response DTO
-	assignmentResponse := dtos.AssignmentResponseDTO{
-		ID:             assignmentModel.ID,
-		Title:          assignmentModel.Title,
-		Description:    assignmentModel.Description,
-		Deadline:       assignmentModel.Deadline,
-		ActiveCourseID: assignmentModel.ActiveCourseID,
-		MaxPoints:      assignmentModel.MaxPoints,
-	}
-
-	return assignmentResponse, nil
+	return dtos.AssignmentResponseDTO{
+		ID:             model.ID,
+		Title:          model.Title,
+		Description:    model.Description,
+		Deadline:       model.Deadline,
+		ActiveCourseID: model.ActiveCourseID,
+		MaxPoints:      model.MaxPoints,
+	}, nil
 }

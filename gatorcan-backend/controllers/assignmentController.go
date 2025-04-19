@@ -83,25 +83,20 @@ func (ac *AssignmentController) GetAssignment(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"assignments": assignments})
 }
 
-func (ac *AssignmentController) CreateorUpdateAssignment(c *gin.Context) {
+func (ac *AssignmentController) CreateOrUpdateAssignment(c *gin.Context) {
 	ac.logger.Printf("Request: %s %s", c.Request.Method, c.Request.URL.Path)
 
-	// Create context with timeout
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
-	// Get username from JWT token
 	_, exists := c.Get("username")
 	if !exists {
-		ac.logger.Printf("Unauthorized access attempt to upload file to assignment")
+		ac.logger.Println("Unauthorized access")
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
 
-	// Extract courseID and assignmentID from URL parameters
 	courseIDParam := c.Param("cid")
-
-	// You can convert them to integer if needed (e.g., using strconv.Atoi)
 	courseID, err := strconv.Atoi(courseIDParam)
 	if err != nil {
 		ac.logger.Printf("Invalid course ID: %s", courseIDParam)
@@ -109,31 +104,28 @@ func (ac *AssignmentController) CreateorUpdateAssignment(c *gin.Context) {
 		return
 	}
 
-	var assignment dtos.CreateAssignmentRequestDTO
+	var assignment dtos.CreateOrUpdateAssignmentRequestDTO
 	if err := c.ShouldBindJSON(&assignment); err != nil {
-		ac.logger.Printf("Failed to parse request body: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse request body"})
+		ac.logger.Printf("Invalid body: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 		return
 	}
-	// Override the IDs in uploadData with the ones from the URL
 	assignment.CourseID = uint(courseID)
-	// Call the service to handle the business logic
+
 	response, err := ac.assignmentService.UpsertAssignment(ctx, ac.logger, &assignment)
-	if err == errors.ErrUserNotFound {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-	if err == errors.ErrCourseNotFound {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
-		return
-	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to upload file to assignment"})
+		switch err {
+		case errors.ErrCourseNotFound:
+			c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
+		case errors.ErrFailedToUpdateAssignment, errors.ErrFailedToCreateAssignment:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Assignment operation failed"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
+		}
 		return
 	}
 
-	// Return the response
-	c.JSON(http.StatusCreated, response)
+	c.JSON(http.StatusOK, response)
 }
 
 func (ac *AssignmentController) DeleteAssignment(c *gin.Context) {

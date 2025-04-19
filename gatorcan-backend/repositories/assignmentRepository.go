@@ -8,7 +8,6 @@ import (
 	"log"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type AssignmentRepository interface {
@@ -110,10 +109,14 @@ func (a *assignmentRepository) LinkUserToAssignmentFile(ctx context.Context, use
 }
 
 func (a *assignmentRepository) UpsertAssignment(ctx context.Context, assignment *models.Assignment) error {
-	if err := a.db.WithContext(ctx).Clauses(clause.OnConflict{
-		UpdateAll: true,
-	}).Create(assignment).Error; err != nil {
-		return errors.ErrFailedToCreateAssignment
+	var existing models.Assignment
+	err := a.db.WithContext(ctx).First(&existing, assignment.ID).Error
+
+	if err == gorm.ErrRecordNotFound || assignment.ID == 0 {
+		return a.db.WithContext(ctx).Create(assignment).Error
+	} else if err != nil {
+		return err
 	}
-	return nil
+
+	return a.db.WithContext(ctx).Save(assignment).Error
 }

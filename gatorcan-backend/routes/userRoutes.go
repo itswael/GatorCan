@@ -57,7 +57,7 @@ func UserRoutes(userController *controllers.UserController,
 			submissionController.GradeSubmission(c)
 		})
 		instructorRoutes.POST("/courses/:cid/upsertassignment", func(c *gin.Context) {
-			assignmentController.CreateorUpdateAssignment(c)
+			assignmentController.CreateOrUpdateAssignment(c)
 		})
 
 	}
