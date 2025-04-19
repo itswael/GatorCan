@@ -56,6 +56,10 @@ func UserRoutes(userController *controllers.UserController,
 		instructorRoutes.POST("/courses/:cid/assignments/:aid/grade", func(c *gin.Context) {
 			submissionController.GradeSubmission(c)
 		})
+		instructorRoutes.POST("/courses/:cid/upsertassignment", func(c *gin.Context) {
+			assignmentController.CreateOrUpdateAssignment(c)
+		})
+
 	}
 
 	courseGroup := router.Group("/courses")
