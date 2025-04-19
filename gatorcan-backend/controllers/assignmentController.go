@@ -15,12 +15,14 @@ import (
 
 type AssignmentController struct {
 	assignmentService interfaces.AssignmentService
+	awsService        interfaces.AWSService
 	logger            *log.Logger
 }
 
-func NewAssignmentController(service interfaces.AssignmentService, logger *log.Logger) *AssignmentController {
+func NewAssignmentController(service interfaces.AssignmentService, awsService interfaces.AWSService, logger *log.Logger) *AssignmentController {
 	return &AssignmentController{
 		assignmentService: service,
+		awsService:        awsService,
 		logger:            logger,
 	}
 }
@@ -125,6 +127,28 @@ func (ac *AssignmentController) CreateOrUpdateAssignment(c *gin.Context) {
 		return
 	}
 
+	if assignment.ID == 0 {
+		// New assignment created
+
+		notificationMessage := "New assignment created: " + assignment.Title
+		err = ac.awsService.PushNotificationToSNS(ctx, ac.logger, notificationMessage)
+		if err != nil {
+			ac.logger.Printf("Failed to send SNS notification: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send notification"})
+			return
+		}
+	} else {
+		// Existing assignment updated
+		notificationMessage := "Assignment updated: " + assignment.Title
+		err = ac.awsService.PushNotificationToSNS(ctx, ac.logger, notificationMessage)
+		if err != nil {
+			ac.logger.Printf("Failed to send SNS notification: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send notification"})
+			return
+		}
+	}
+
+	// Return the response
 	c.JSON(http.StatusOK, response)
 }
 

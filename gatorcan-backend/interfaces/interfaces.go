@@ -83,3 +83,7 @@ type AiServiceService interface {
 	GetCourseRecommendations(ctx context.Context, logger *log.Logger, username string) ([]dtos.CourseRecommendationResponseDTO, error)
 	GetTextSummary(ctx context.Context, logger *log.Logger, textSummaryRequest *dtos.TextSummaryRequestDTO) (*dtos.TextSummaryResponseDTO, error)
 }
+
+type AWSService interface {
+	PushNotificationToSNS(ctx context.Context, logger *log.Logger, message string) error
+}

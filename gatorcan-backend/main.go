@@ -83,11 +83,12 @@ func main() {
 	assignmentService := services.NewAssignmentService(assignmentRepo, userRepo, courseRepo, appConfig, httpClient)
 	submissionService := services.NewSubmissionService(submissionRepo, assignmentRepo, userRepo, courseRepo, appConfig, httpClient)
 	aiserviceService := services.NewAIServiceService(courseRepo, userRepo, appConfig, httpClient)
+	awsService := services.NewAWSService(httpClient, appConfig)
 
 	// Initialize controllers
 	userController := controllers.NewUserController(userService, logger)
 	courseController := controllers.NewCourseController(courseService, logger)
-	assignmentController := controllers.NewAssignmentController(assignmentService, logger)
+	assignmentController := controllers.NewAssignmentController(assignmentService, awsService, logger)
 	submissionController := controllers.NewSubmissionController(submissionService, userService, logger)
 	aiserviceController := controllers.NewAIServiceController(aiserviceService, logger)
 
