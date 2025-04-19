@@ -17,6 +17,7 @@ type CourseRepository interface {
 	RejectEnrollment(ctx context.Context, enrollmentID uint) error
 	GetPendingEnrollments(ctx context.Context) ([]models.Enrollment, error)
 	GetCourseDetails(ctx context.Context, courseID uint) (models.Course, error)
+	GetInstructorCourses(ctx context.Context, instructorID uint, page int, pageSize int) ([]models.Course, error)
 }
 
 type UserRepository interface {

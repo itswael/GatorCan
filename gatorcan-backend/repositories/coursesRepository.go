@@ -18,6 +18,7 @@ type CourseRepository interface {
 	RejectEnrollment(ctx context.Context, enrollmentID uint) error
 	GetPendingEnrollments(ctx context.Context) ([]models.Enrollment, error)
 	GetCourseDetails(ctx context.Context, courseID uint) (models.Course, error)
+	GetInstructorCourses(ctx context.Context, instructorID uint, page int, pageSize int) ([]models.Course, error)
 }
 
 type courseRepository struct {
@@ -136,4 +137,22 @@ func (r *courseRepository) GetPendingEnrollments(ctx context.Context) ([]models.
 		return nil, errors.New("failed to fetch pending enrollments")
 	}
 	return enrollments, nil
+}
+
+func (r *courseRepository) GetInstructorCourses(ctx context.Context, instructorID uint, page, pageSize int) ([]models.Course, error) {
+	var courses []models.Course
+	offset := (page - 1) * pageSize
+	err := r.db.WithContext(ctx).
+		Table("courses").
+		Joins("JOIN active_courses ON active_courses.course_id = courses.id").
+		Where("active_courses.instructor_id = ?", instructorID).
+		Limit(pageSize).
+		Offset(offset).
+		Find(&courses).Error
+
+	if err != nil {
+		return nil, errors.New("failed to fetch instructor's courses")
+	}
+
+	return courses, nil
 }
