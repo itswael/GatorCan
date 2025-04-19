@@ -132,3 +132,8 @@ func (m *MockSubmissionService) GradeSubmission(ctx context.Context, logger *log
 	}
 	return args.Get(0).(*dtos.GradeSubmissionResponseDTO), args.Error(1)
 }
+
+func (m *MockAssignmentService) UpsertAssignment(ctx context.Context, logger *log.Logger, assignment *dtos.CreateAssignmentRequestDTO) (dtos.AssignmentResponseDTO, error) {
+	args := m.Called(ctx, logger, assignment)
+	return args.Get(0).(dtos.AssignmentResponseDTO), args.Error(1)
+}

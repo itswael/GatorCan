@@ -192,6 +192,15 @@ func (m *MockAssignmentRepository) UploadFileToAssignment(ctx context.Context, l
 	return args.Get(0).(*dtos.UploadFileToAssignmentResponseDTO), args.Error(1)
 }
 
+func (m *MockAssignmentRepository) UpsertAssignment(ctx context.Context, assignment *models.Assignment) error {
+	args := m.Called(ctx, assignment)
+	// Set the ID on the assignment to simulate DB creation
+	if args.Error(0) == nil && assignment.ID == 0 {
+		assignment.ID = 1
+	}
+	return args.Error(0)
+}
+
 // MockSubmissionRepository mocks the SubmissionRepository interface
 type MockSubmissionRepository struct {
 	mock.Mock
