@@ -112,3 +112,34 @@ func (s *AssignmentService) UploadFileToAssignment(ctx context.Context, logger *
 
 	return response, nil
 }
+
+func (s *AssignmentService) UpsertAssignment(ctx context.Context, logger *log.Logger, input *dtos.CreateOrUpdateAssignmentRequestDTO) (dtos.AssignmentResponseDTO, error) {
+
+	_, err := s.courseRepo.GetCourseByID(ctx, int(input.CourseID))
+	if err != nil {
+		return dtos.AssignmentResponseDTO{}, errors.ErrCourseNotFound
+	}
+
+	model := models.Assignment{
+		ID:             input.ID, // 0 if creating
+		Title:          input.Title,
+		Description:    input.Description,
+		Deadline:       input.Deadline,
+		ActiveCourseID: input.CourseID,
+		MaxPoints:      input.MaxPoints,
+	}
+
+	if err := s.assignmentRepo.UpsertAssignment(ctx, &model); err != nil {
+		logger.Printf("Upsert failed: %v", err)
+		return dtos.AssignmentResponseDTO{}, err
+	}
+
+	return dtos.AssignmentResponseDTO{
+		ID:             model.ID,
+		Title:          model.Title,
+		Description:    model.Description,
+		Deadline:       model.Deadline,
+		ActiveCourseID: model.ActiveCourseID,
+		MaxPoints:      model.MaxPoints,
+	}, nil
+}

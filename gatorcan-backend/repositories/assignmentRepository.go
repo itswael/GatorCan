@@ -16,6 +16,7 @@ type AssignmentRepository interface {
 	UploadFileToAssignment(ctx context.Context, logger *log.Logger, username string, uploadData *dtos.UploadFileToAssignmentDTO) (*dtos.UploadFileToAssignmentResponseDTO, error)
 	CreateAssignmentFile(ctx context.Context, assignmentFile *models.AssignmentFile) error
 	LinkUserToAssignmentFile(ctx context.Context, userAssignmentFile *models.UserAssignmentFile) error
+	UpsertAssignment(ctx context.Context, assignment *models.Assignment) error
 }
 
 type assignmentRepository struct {
@@ -105,4 +106,17 @@ func (a *assignmentRepository) LinkUserToAssignmentFile(ctx context.Context, use
 		return errors.ErrFailedToLinkFileToUser
 	}
 	return nil
+}
+
+func (a *assignmentRepository) UpsertAssignment(ctx context.Context, assignment *models.Assignment) error {
+	var existing models.Assignment
+	err := a.db.WithContext(ctx).First(&existing, assignment.ID).Error
+
+	if err == gorm.ErrRecordNotFound || assignment.ID == 0 {
+		return a.db.WithContext(ctx).Create(assignment).Error
+	} else if err != nil {
+		return err
+	}
+
+	return a.db.WithContext(ctx).Save(assignment).Error
 }

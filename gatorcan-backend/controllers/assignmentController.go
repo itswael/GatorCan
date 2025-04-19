@@ -15,12 +15,14 @@ import (
 
 type AssignmentController struct {
 	assignmentService interfaces.AssignmentService
+	awsService        interfaces.AWSService
 	logger            *log.Logger
 }
 
-func NewAssignmentController(service interfaces.AssignmentService, logger *log.Logger) *AssignmentController {
+func NewAssignmentController(service interfaces.AssignmentService, awsService interfaces.AWSService, logger *log.Logger) *AssignmentController {
 	return &AssignmentController{
 		assignmentService: service,
+		awsService:        awsService,
 		logger:            logger,
 	}
 }
@@ -83,12 +85,71 @@ func (ac *AssignmentController) GetAssignment(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"assignments": assignments})
 }
 
-func (ac *AssignmentController) CreateAssignment(c *gin.Context) {
-	panic("implement me")
-}
+func (ac *AssignmentController) CreateOrUpdateAssignment(c *gin.Context) {
+	ac.logger.Printf("Request: %s %s", c.Request.Method, c.Request.URL.Path)
 
-func (ac *AssignmentController) UpdateAssignment(c *gin.Context) {
-	panic("implement me")
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	_, exists := c.Get("username")
+	if !exists {
+		ac.logger.Println("Unauthorized access")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	courseIDParam := c.Param("cid")
+	courseID, err := strconv.Atoi(courseIDParam)
+	if err != nil {
+		ac.logger.Printf("Invalid course ID: %s", courseIDParam)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course ID"})
+		return
+	}
+
+	var assignment dtos.CreateOrUpdateAssignmentRequestDTO
+	if err := c.ShouldBindJSON(&assignment); err != nil {
+		ac.logger.Printf("Invalid body: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+		return
+	}
+	assignment.CourseID = uint(courseID)
+
+	response, err := ac.assignmentService.UpsertAssignment(ctx, ac.logger, &assignment)
+	if err != nil {
+		switch err {
+		case errors.ErrCourseNotFound:
+			c.JSON(http.StatusNotFound, gin.H{"error": "Course not found"})
+		case errors.ErrFailedToUpdateAssignment, errors.ErrFailedToCreateAssignment:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Assignment operation failed"})
+		default:
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong"})
+		}
+		return
+	}
+
+	if assignment.ID == 0 {
+		// New assignment created
+
+		notificationMessage := "New assignment created: " + assignment.Title
+		err = ac.awsService.PushNotificationToSNS(ctx, ac.logger, notificationMessage)
+		if err != nil {
+			ac.logger.Printf("Failed to send SNS notification: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send notification"})
+			return
+		}
+	} else {
+		// Existing assignment updated
+		notificationMessage := "Assignment updated: " + assignment.Title
+		err = ac.awsService.PushNotificationToSNS(ctx, ac.logger, notificationMessage)
+		if err != nil {
+			ac.logger.Printf("Failed to send SNS notification: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send notification"})
+			return
+		}
+	}
+
+	// Return the response
+	c.JSON(http.StatusOK, response)
 }
 
 func (ac *AssignmentController) DeleteAssignment(c *gin.Context) {
@@ -96,9 +157,6 @@ func (ac *AssignmentController) DeleteAssignment(c *gin.Context) {
 }
 
 func (ac *AssignmentController) SubmitAssignment(c *gin.Context) {
-	panic("implement me")
-}
-func (ac *AssignmentController) GradeAssignment(c *gin.Context) {
 	panic("implement me")
 }
 
