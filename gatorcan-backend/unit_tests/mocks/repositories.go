@@ -226,3 +226,13 @@ func (m *MockCourseRepository) GetInstructorCourses(ctx context.Context, instruc
 	}
 	return args.Get(0).([]models.Course), args.Error(1)
 }
+
+func (m *MockSubmissionRepository) GetSubmissions(ctx context.Context, courseID int, assignmentID int) ([]dtos.SubmissionsResponseDTO, error) {
+	return m.Called(ctx, courseID, assignmentID).Get(0).([]dtos.SubmissionsResponseDTO), m.Called(ctx, courseID, assignmentID).Error(1)
+}
+
+func (m *MockSubmissionRepository) GetGrades(ctx context.Context, courseID int, userID uint, assignmentID int) ([]dtos.GradeResponseDTO, error) {
+	// Mock implementation
+	args := m.Called(ctx, courseID, userID, assignmentID)
+	return args.Get(0).([]dtos.GradeResponseDTO), args.Error(1)
+}
