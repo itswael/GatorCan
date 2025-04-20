@@ -104,8 +104,12 @@ func UserRoutes(userController *controllers.UserController,
 				assignmentController.GetAssignment(c)
 			})
 
-			assignmentGroup.GET("/:aid/submissions", func(c *gin.Context) {
+			assignmentGroup.GET("/:aid/submission", func(c *gin.Context) {
 				submissionController.GetSubmission(c)
+			})
+
+			assignmentGroup.GET("/:aid/submissions", func(c *gin.Context) {
+				submissionController.GetSubmissions(c)
 			})
 
 			assignmentGroup.POST("/:aid/upload", func(c *gin.Context) {

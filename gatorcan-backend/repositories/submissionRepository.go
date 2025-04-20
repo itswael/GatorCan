@@ -14,6 +14,7 @@ import (
 type SubmissionRepository interface {
 	GradeSubmission(ctx context.Context, assignmentID uint, courseID uint, userID uint, grade float64, feedback string) error
 	GetSubmission(ctx context.Context, courseID int, assignmentID int, userID uint) (*models.Submission, error)
+	GetSubmissions(ctx context.Context, courseID int, assignmentID int) ([]dtos.SubmissionsResponseDTO, error)
 	GetGrades(ctx context.Context, courseID int, userID uint, count int) ([]dtos.GradeResponseDTO, error)
 }
 
@@ -94,4 +95,32 @@ func (s *submissionRepository) GetGrades(ctx context.Context, courseID int, user
 
 	return grades, nil
 
+}
+
+func (s *submissionRepository) GetSubmissions(ctx context.Context, courseID int, assignmentID int) ([]dtos.SubmissionsResponseDTO, error) {
+	var submissions []dtos.SubmissionsResponseDTO
+	if err := s.db.WithContext(ctx).
+		Raw(`
+				SELECT 
+					s.assignment_id, 
+					s.user_id, 
+					u.username, 
+					s.grade, 
+					s.feedback, 
+					s.file_name, 
+					s.file_type, 
+					s.file_url, 
+					s.updated_at
+				FROM 
+					submissions s 
+					INNER JOIN users u ON s.user_id = u.id
+				WHERE 
+					s.assignment_id = ? 
+					AND s.course_id = ?
+			`, assignmentID, courseID).Scan(&submissions).Error; err != nil {
+		log.Printf("Error fetching submissions: %v", err)
+		return nil, errors.ErrFetchingSubmissions
+	}
+
+	return submissions, nil
 }
