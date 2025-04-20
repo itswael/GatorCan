@@ -9,6 +9,7 @@ import (
 	"gatorcan-backend/models"
 	"gatorcan-backend/services"
 	"gatorcan-backend/unit_tests/mocks"
+	"io"
 	"log"
 	"os"
 	"testing"
@@ -407,6 +408,146 @@ func TestUploadFileToAssignment_service(t *testing.T) {
 			mockUserRepo.AssertExpectations(t)
 			mockCourseRepo.AssertExpectations(t)
 			mockHTTPClient.AssertExpectations(t)
+		})
+	}
+}
+
+func TestCreateOrUpdateAssignment(t *testing.T) {
+	// Setup mocks
+	mockAssignmentRepo := new(mocks.MockAssignmentRepository)
+	mockUserRepo := new(mocks.MockUserRepository)
+	mockCourseRepo := new(mocks.MockCourseRepository)
+	mockHTTPClient := new(mocks.MockHTTPClient)
+
+	// Create test config
+	appConfig := &config.AppConfig{
+		Environment: "test",
+	}
+
+	// Create the service
+	assignmentService := services.NewAssignmentService(
+		mockAssignmentRepo,
+		mockUserRepo,
+		mockCourseRepo,
+		appConfig,
+		mockHTTPClient,
+	)
+
+	ctx := context.Background()
+	now := time.Now()
+
+	tests := []struct {
+		name         string
+		courseID     int
+		username     string
+		dto          *dtos.CreateOrUpdateAssignmentRequestDTO
+		mockSetup    func()
+		expectError  bool
+		errorType    error
+		expectedResp dtos.AssignmentResponseDTO
+	}{
+		{
+			name:     "Create Assignment Success",
+			courseID: 101,
+			username: "testuser",
+			dto: &dtos.CreateOrUpdateAssignmentRequestDTO{
+				ID:          0,
+				CourseID:    101,
+				MaxPoints:   100,
+				Description: "Test Description",
+				Title:       "Test Assignment",
+				Deadline:    now.Add(48 * time.Hour),
+			},
+			mockSetup: func() {
+				mockCourseRepo.On("GetCourseByID", ctx, 101).
+					Return(models.ActiveCourse{ID: 101}, nil).Once()
+
+				mockAssignmentRepo.On("UpsertAssignment", ctx, mock.MatchedBy(func(a *models.Assignment) bool {
+					return a.ActiveCourseID == 101 && a.Title == "Test Assignment"
+				})).Run(func(args mock.Arguments) {
+					arg := args.Get(1).(*models.Assignment)
+					arg.ID = 1
+					arg.CreatedAt = now
+					arg.UpdatedAt = now
+				}).Return(nil).Once()
+			},
+			expectError: false,
+			expectedResp: dtos.AssignmentResponseDTO{
+				ID:             1,
+				Title:          "Test Assignment",
+				Description:    "Test Description",
+				Deadline:       now.Add(48 * time.Hour),
+				ActiveCourseID: 101,
+				MaxPoints:      100,
+			},
+		},
+		{
+			name:     "Course Not Found",
+			courseID: 999,
+			username: "testuser",
+			dto: &dtos.CreateOrUpdateAssignmentRequestDTO{
+				ID:          0,
+				CourseID:    999,
+				Title:       "Some Assignment",
+				Description: "Blah",
+				Deadline:    now.Add(24 * time.Hour),
+			},
+			mockSetup: func() {
+				mockCourseRepo.On("GetCourseByID", ctx, 999).
+					Return(models.ActiveCourse{}, domainErrors.ErrCourseNotFound).Once()
+			},
+			expectError:  true,
+			errorType:    domainErrors.ErrCourseNotFound,
+			expectedResp: dtos.AssignmentResponseDTO{},
+		},
+		{
+			name:     "Upsert Error",
+			courseID: 101,
+			username: "testuser",
+			dto: &dtos.CreateOrUpdateAssignmentRequestDTO{
+				ID:          0,
+				CourseID:    101,
+				Title:       "Err Assignment",
+				Description: "Fail here",
+				Deadline:    now.Add(24 * time.Hour),
+			},
+			mockSetup: func() {
+				mockCourseRepo.On("GetCourseByID", ctx, 101).
+					Return(models.ActiveCourse{ID: 101}, nil).Once()
+
+				mockAssignmentRepo.On("UpsertAssignment", ctx, mock.Anything).
+					Return(domainErrors.ErrFailedToCreateAssignment).Once()
+			},
+			expectError:  true,
+			errorType:    domainErrors.ErrFailedToCreateAssignment,
+			expectedResp: dtos.AssignmentResponseDTO{},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.mockSetup()
+
+			logger := log.New(io.Discard, "", log.LstdFlags)
+
+			resp, err := assignmentService.UpsertAssignment(ctx, logger, tc.dto)
+
+			if tc.expectError {
+				assert.Error(t, err)
+				if tc.errorType != nil {
+					assert.Equal(t, tc.errorType, err)
+				}
+				assert.Equal(t, tc.expectedResp, resp)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectedResp.Title, resp.Title)
+				assert.Equal(t, tc.expectedResp.Description, resp.Description)
+				assert.Equal(t, tc.expectedResp.MaxPoints, resp.MaxPoints)
+				assert.Equal(t, tc.expectedResp.ActiveCourseID, resp.ActiveCourseID)
+			}
+
+			mockAssignmentRepo.AssertExpectations(t)
+			mockCourseRepo.AssertExpectations(t)
 		})
 	}
 }

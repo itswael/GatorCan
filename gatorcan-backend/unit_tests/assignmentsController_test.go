@@ -365,3 +365,117 @@ func TestUploadFileToAssignment(t *testing.T) {
 		})
 	}
 }
+
+func TestCreateAssignment(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	logger := log.New(io.Discard, "", 0)
+
+	tests := []struct {
+		name           string
+		courseIDParam  string
+		requestBody    map[string]interface{}
+		setupMock      func(*mocks.MockAssignmentService, *mocks.MockAWSService)
+		expectedStatus int
+		expectedBody   string
+	}{
+		{
+			name:          "Success",
+			courseIDParam: "1",
+			requestBody: map[string]interface{}{
+				"title":       "New Assignment",
+				"description": "Test Description",
+				"deadline":    time.Now().Add(24 * time.Hour).Format(time.RFC3339),
+			},
+			setupMock: func(m *mocks.MockAssignmentService, aws *mocks.MockAWSService) {
+				m.On("UpsertAssignment", mock.Anything, mock.Anything, mock.MatchedBy(func(data *dtos.CreateOrUpdateAssignmentRequestDTO) bool {
+					return data.CourseID == 1 && data.Title == "New Assignment"
+				})).Return(dtos.AssignmentResponseDTO{
+					ID:             1,
+					Title:          "New Assignment",
+					Description:    "Test Description",
+					Deadline:       time.Now().Add(24 * time.Hour),
+					ActiveCourseID: 1,
+					MaxPoints:      0,
+				}, nil)
+
+				aws.On("PushNotificationToSNS", mock.Anything, mock.Anything, mock.AnythingOfType("string")).Return(nil)
+			},
+			expectedStatus: http.StatusOK,
+			expectedBody:   `"title":"New Assignment"`,
+		},
+		{
+			name:          "Invalid Course ID",
+			courseIDParam: "invalid",
+			requestBody: map[string]interface{}{
+				"title":       "New Assignment",
+				"description": "Test Description",
+				"deadline":    time.Now().Add(24 * time.Hour).Format(time.RFC3339),
+			},
+			setupMock:      func(m *mocks.MockAssignmentService, aws *mocks.MockAWSService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   `{"error":"Invalid course ID"}`,
+		},
+		{
+			name:          "Missing Title",
+			courseIDParam: "1",
+			requestBody: map[string]interface{}{
+				"description": "Test Description",
+				"deadline":    time.Now().Add(24 * time.Hour).Format(time.RFC3339),
+			},
+			setupMock:      func(m *mocks.MockAssignmentService, aws *mocks.MockAWSService) {},
+			expectedStatus: http.StatusBadRequest,
+			expectedBody:   `{"error":"Invalid request body"}`,
+		},
+		{
+			name:          "Service Error",
+			courseIDParam: "1",
+			requestBody: map[string]interface{}{
+				"title":       "New Assignment",
+				"description": "Test Description",
+				"deadline":    time.Now().Add(24 * time.Hour).Format(time.RFC3339),
+			},
+			setupMock: func(m *mocks.MockAssignmentService, aws *mocks.MockAWSService) {
+				m.On("UpsertAssignment", mock.Anything, mock.Anything, mock.Anything).Return(dtos.AssignmentResponseDTO{}, errors.ErrDatabaseError)
+			},
+			expectedStatus: http.StatusInternalServerError,
+			expectedBody:   `{"error":"Something went wrong"}`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			mockService := new(mocks.MockAssignmentService)
+			mockAwsService := new(mocks.MockAWSService)
+			tc.setupMock(mockService, mockAwsService)
+
+			controller := controllers.NewAssignmentController(mockService, mockAwsService, logger)
+
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+
+			c.Params = gin.Params{{Key: "cid", Value: tc.courseIDParam}}
+
+			var bodyBytes []byte
+			if tc.requestBody != nil {
+				bodyBytes, _ = json.Marshal(tc.requestBody)
+			}
+
+			req := httptest.NewRequest("POST", "/courses/"+tc.courseIDParam+"/assignments", bytes.NewBuffer(bodyBytes))
+			req.Header.Set("Content-Type", "application/json")
+			c.Request = req
+
+			// Mock authenticated user context
+			c.Set("username", "testuser")
+
+			controller.CreateOrUpdateAssignment(c)
+
+			assert.Equal(t, tc.expectedStatus, w.Code)
+			if tc.expectedBody != "" {
+				assert.Contains(t, w.Body.String(), tc.expectedBody)
+			}
+
+			mockService.AssertExpectations(t)
+			mockAwsService.AssertExpectations(t)
+		})
+	}
+}

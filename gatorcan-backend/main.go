@@ -89,7 +89,7 @@ func main() {
 	userController := controllers.NewUserController(userService, logger)
 	courseController := controllers.NewCourseController(courseService, logger)
 	assignmentController := controllers.NewAssignmentController(assignmentService, awsService, logger)
-	submissionController := controllers.NewSubmissionController(submissionService, userService, logger)
+	submissionController := controllers.NewSubmissionController(submissionService, userService, awsService, logger)
 	aiserviceController := controllers.NewAIServiceController(aiserviceService, logger)
 
 	// Set up router
