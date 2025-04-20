@@ -134,6 +134,52 @@ func (sc *SubmissionController) GetSubmission(c *gin.Context) {
 	c.JSON(http.StatusOK, submissions)
 }
 
+func (sc *SubmissionController) GetSubmissions(c *gin.Context) {
+	sc.logger.Printf("Request: %s %s", c.Request.Method, c.Request.URL.Path)
+	// Create context with timeout
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	// Get username from JWT token
+	_, exists := c.Get("username")
+	if !exists {
+		sc.logger.Printf("Unauthorized access")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// Extract courseID and assignmentID from URL parameters
+	courseIDParam := c.Param("cid")
+	assignmentIDParam := c.Param("aid")
+
+	// You can convert them to integer if needed (e.g., using strconv.Atoi)
+	courseID, err := strconv.Atoi(courseIDParam)
+	if err != nil {
+		sc.logger.Printf("Invalid course ID: %s", courseIDParam)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid course ID"})
+		return
+	}
+	assignmentID, err := strconv.Atoi(assignmentIDParam)
+	if err != nil {
+		sc.logger.Printf("Invalid assignment ID: %s", assignmentIDParam)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid assignment ID"})
+		return
+	}
+
+	submissions, err := sc.submissionService.GetSubmissions(ctx, courseID, assignmentID)
+	if err == errors.ErrSubmissionNotFound {
+		c.JSON(http.StatusNotFound, gin.H{"error": errors.ErrSubmissionNotFound.Error()})
+		return
+	} else if err != nil {
+		sc.logger.Printf("Error fetching submission: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errors.ErrFetchingSubmissions})
+		return
+	}
+
+	// Return the response as JSON
+	c.JSON(http.StatusOK, submissions)
+}
+
 func (sc *SubmissionController) GetGrades(c *gin.Context) {
 	sc.logger.Printf("Request: %s %s", c.Request.Method, c.Request.URL.Path)
 	// Create context with timeout

@@ -82,6 +82,14 @@ func (s *SubmissionServiceImpl) GetSubmission(ctx context.Context, courseID int,
 	return &response, nil
 }
 
+func (s *SubmissionServiceImpl) GetSubmissions(ctx context.Context, courseID int, assignmentID int) ([]dtos.SubmissionsResponseDTO, error) {
+	submission, err := s.submissionRepo.GetSubmissions(ctx, courseID, assignmentID)
+	if err != nil {
+		return nil, errors.ErrFetchingSubmissions
+	}
+	return submission, nil
+}
+
 func (s *SubmissionServiceImpl) GetGrades(ctx context.Context, logger *log.Logger, courseID int, userID uint) ([]dtos.GradeResponseDTO, error) {
 	// Validate course existence
 	course, err := s.courseRepo.GetCourseByID(ctx, courseID)

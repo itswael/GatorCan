@@ -34,6 +34,18 @@ type GradeResponseDTO struct {
 	Mean         float64   `json:"mean"`
 }
 
+type SubmissionsResponseDTO struct {
+	AssignmentID uint      `json:"assignment_id"`
+	UserID       uint      `json:"user_id"`
+	Username     string    `json:"username"`
+	Grade        int       `json:"grade"`
+	Feedback     string    `json:"feedback"`
+	FileName     string    `json:"file_name"`
+	FileType     string    `json:"file_type"`
+	FileURL      string    `json:"file_url"`
+	SubmittedAt  time.Time `json:"submitted_at"`
+}
+
 func NewSubmissionRequestDTO(assignmentID uint, fileURL, fileName, fileType string) *SubmissionRequestDTO {
 	return &SubmissionRequestDTO{
 		AssignmentID: assignmentID,
