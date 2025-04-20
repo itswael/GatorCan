@@ -218,3 +218,11 @@ func (m *MockSubmissionRepository) GradeSubmission(ctx context.Context, assignme
 	args := m.Called(ctx, assignmentID, courseID, userID, grade, feedback)
 	return args.Error(0)
 }
+
+func (m *MockCourseRepository) GetInstructorCourses(ctx context.Context, instructorID uint, page int, pageSize int) ([]models.Course, error) {
+	args := m.Called(ctx, instructorID, page, pageSize)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]models.Course), args.Error(1)
+}

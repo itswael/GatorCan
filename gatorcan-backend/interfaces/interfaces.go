@@ -17,6 +17,7 @@ type CourseRepository interface {
 	RejectEnrollment(ctx context.Context, enrollmentID uint) error
 	GetPendingEnrollments(ctx context.Context) ([]models.Enrollment, error)
 	GetCourseDetails(ctx context.Context, courseID uint) (models.Course, error)
+	GetInstructorCourses(ctx context.Context, instructorID uint, page int, pageSize int) ([]models.Course, error)
 }
 
 type UserRepository interface {
@@ -72,11 +73,13 @@ type AssignmentService interface {
 type SubmissionRepository interface {
 	GradeSubmission(ctx context.Context, assignmentID uint, courseID uint, userID uint, grade float64, feedback string) error
 	GetSubmission(ctx context.Context, courseID int, assignmentID int, userID uint) (*models.Submission, error)
+	GetGrades(ctx context.Context, courseID int, userID uint, count int) ([]dtos.GradeResponseDTO, error)
 }
 
 type SubmissionService interface {
 	GradeSubmission(ctx context.Context, logger *log.Logger, username string, submissionData *dtos.GradeSubmissionRequestDTO) (*dtos.GradeSubmissionResponseDTO, error)
 	GetSubmission(ctx context.Context, courseID int, assignmentID int, userID uint) (*dtos.SubmissionResponseDTO, error)
+	GetGrades(ctx context.Context, logger *log.Logger, courseID int, userID uint) ([]dtos.GradeResponseDTO, error)
 }
 
 type AiServiceService interface {

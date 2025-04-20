@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	dtos "gatorcan-backend/DTOs"
 	"gatorcan-backend/errors"
 	"gatorcan-backend/models"
 	"log"
@@ -13,6 +14,7 @@ import (
 type SubmissionRepository interface {
 	GradeSubmission(ctx context.Context, assignmentID uint, courseID uint, userID uint, grade float64, feedback string) error
 	GetSubmission(ctx context.Context, courseID int, assignmentID int, userID uint) (*models.Submission, error)
+	GetGrades(ctx context.Context, courseID int, userID uint, count int) ([]dtos.GradeResponseDTO, error)
 }
 
 type submissionRepository struct {
@@ -59,4 +61,37 @@ func (s *submissionRepository) GetSubmission(ctx context.Context, course_id int,
 		return &models.Submission{}, errors.ErrSubmissionNotFound
 	}
 	return &submission, nil
+}
+
+func (s *submissionRepository) GetGrades(ctx context.Context, courseID int, userID uint, count int) ([]dtos.GradeResponseDTO, error) {
+	var grades []dtos.GradeResponseDTO
+	if err := s.db.WithContext(ctx).
+		Raw(`
+				SELECT 
+					s.assignment_id, 
+					a.title, 
+					a.max_points, 
+					a.deadline, 
+					s.grade, 
+					s.updated_at, 
+					s.feedback,
+					AVG(all_s.grade)/? AS mean,
+					MIN(all_s.grade) AS min,
+					MAX(all_s.grade) AS max
+				FROM 
+					assignments a 
+					INNER JOIN submissions s ON a.id = s.assignment_id
+					LEFT JOIN submissions all_s ON a.id = all_s.assignment_id AND all_s.course_id = s.course_id
+				WHERE 
+					s.user_id = ? 
+					AND s.course_id = ?
+				GROUP BY 
+					s.assignment_id, a.title, a.max_points, a.deadline, s.grade, s.updated_at, s.feedback
+			`, count, userID, courseID).Scan(&grades).Error; err != nil {
+		log.Printf("Error fetching grades: %v", err)
+		return nil, errors.ErrFetchingGrades
+	}
+
+	return grades, nil
+
 }
