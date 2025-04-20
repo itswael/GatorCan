@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"gatorcan-backend/unit_tests/mocks"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -39,6 +40,16 @@ func TestGetCoursesService(t *testing.T) {
 	testUser := &models.User{
 		Username: "testuser",
 		Email:    "test@example.com",
+		Roles:    []*models.Role{}, // Regular user with no special roles
+	}
+
+	// Create instructor user
+	instructorUser := &models.User{
+		Username: "instructor",
+		Email:    "instructor@example.com",
+		Roles: []*models.Role{
+			{Name: "instructor"},
+		},
 	}
 
 	tests := []struct {
@@ -97,6 +108,32 @@ func TestGetCoursesService(t *testing.T) {
 			expectError:   true,
 			errorType:     domainErrors.ErrFailedToFetch,
 		},
+		// New test case for instructor role
+		{
+			name:     "Success - Instructor Courses",
+			username: "instructor",
+			page:     1,
+			pageSize: 20,
+			mockCourses: []models.Course{
+				{ID: 3, Name: "Instructor Course 1", Description: "Instructor Description 1"},
+				{ID: 4, Name: "Instructor Course 2", Description: "Instructor Description 2"},
+			},
+			mockError:     nil,
+			expectedCount: 2,
+			expectError:   false,
+		},
+		// Test case for instructor with database error
+		{
+			name:          "Instructor Database Error",
+			username:      "instructor",
+			page:          1,
+			pageSize:      20,
+			mockCourses:   nil,
+			mockError:     errors.New("database error"),
+			expectedCount: 0,
+			expectError:   true,
+			errorType:     domainErrors.ErrFailedToFetch,
+		},
 	}
 
 	for _, tc := range tests {
@@ -104,6 +141,9 @@ func TestGetCoursesService(t *testing.T) {
 			// Setup mock expectations based on test case
 			if tc.username == "nonexistent" {
 				mockUserRepo.On("GetUserByUsername", ctx, tc.username).Return(nil, tc.mockError).Once()
+			} else if tc.username == "instructor" {
+				mockUserRepo.On("GetUserByUsername", ctx, tc.username).Return(instructorUser, nil).Once()
+				mockCourseRepo.On("GetInstructorCourses", ctx, instructorUser.ID, tc.page, tc.pageSize).Return(tc.mockCourses, tc.mockError).Once()
 			} else {
 				mockUserRepo.On("GetUserByUsername", ctx, tc.username).Return(testUser, nil).Once()
 				mockCourseRepo.On("GetCourses", ctx, tc.page, tc.pageSize).Return(tc.mockCourses, tc.mockError).Once()
