@@ -16,13 +16,15 @@ import (
 type SubmissionController struct {
 	submissionService interfaces.SubmissionService
 	userService       interfaces.UserService
+	awsService        interfaces.AWSService
 	logger            *log.Logger
 }
 
-func NewSubmissionController(service interfaces.SubmissionService, userService interfaces.UserService, logger *log.Logger) *SubmissionController {
+func NewSubmissionController(service interfaces.SubmissionService, userService interfaces.UserService, awsService interfaces.AWSService, logger *log.Logger) *SubmissionController {
 	return &SubmissionController{
 		submissionService: service,
 		userService:       userService,
+		awsService:        awsService,
 		logger:            logger,
 	}
 }
@@ -73,6 +75,14 @@ func (sc *SubmissionController) GradeSubmission(c *gin.Context) {
 	} else if err != nil {
 		sc.logger.Printf("Error grading submission: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error grading submission"})
+		return
+	}
+
+	notificationMessage := "Submission graded: " + strconv.Itoa(int(submissionData.AssignmentID)) + " for user: " + usernameStr
+	err = sc.awsService.PushNotificationToSNS(ctx, sc.logger, notificationMessage)
+	if err != nil {
+		sc.logger.Printf("Failed to send SNS notification: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to send SNS notification"})
 		return
 	}
 
