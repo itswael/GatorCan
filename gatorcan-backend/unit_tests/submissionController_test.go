@@ -152,12 +152,13 @@ func TestGetSubmission(t *testing.T) {
 			// Setup mock services
 			mockSubmissionService := new(mocks.MockSubmissionService)
 			mockUserService := new(mocks.MockUserService)
+			MockAWSService := new(mocks.MockAWSService)
 
 			tc.setupUserMock(mockUserService)
 			tc.setupSubmissionMock(mockSubmissionService)
 
 			// Create controller
-			submissionController := controllers.NewSubmissionController(mockSubmissionService, mockUserService, logger)
+			submissionController := controllers.NewSubmissionController(mockSubmissionService, mockUserService, MockAWSService, logger)
 
 			// Setup HTTP request context
 			w := httptest.NewRecorder()
@@ -208,6 +209,7 @@ func TestGradeSubmission(t *testing.T) {
 		gradeRequestBody    string
 		setupUserMock       func(*mocks.MockUserService)
 		setupSubmissionMock func(*mocks.MockSubmissionService)
+		setupAwsMock        func(*mocks.MockAWSService)
 		expectedStatus      int
 		expectedBody        string
 		checkBody           bool
@@ -250,6 +252,11 @@ func TestGradeSubmission(t *testing.T) {
 					Feedback:     "Well done!",
 				}, nil)
 			},
+			setupAwsMock: func(m *mocks.MockAWSService) {
+				// Mock AWS SNS notification call
+				expectedMessage := "Submission graded: 1 for user: instructor1"
+				m.On("PushNotificationToSNS", mock.Anything, mock.Anything, expectedMessage).Return(nil)
+			},
 			expectedStatus: http.StatusOK,
 			checkBody:      false,
 		},
@@ -260,6 +267,7 @@ func TestGradeSubmission(t *testing.T) {
 			gradeRequestBody:    `{"assignment_id": 1, "user_id": 1, "course_id": 1, "grade": 90, "feedback": "Well done!"}`,
 			setupUserMock:       func(m *mocks.MockUserService) {},
 			setupSubmissionMock: func(m *mocks.MockSubmissionService) {},
+			setupAwsMock:        func(m *mocks.MockAWSService) {},
 			expectedStatus:      http.StatusUnauthorized,
 			expectedBody:        `{"error":"Unauthorized"}`,
 			checkBody:           true,
@@ -277,6 +285,7 @@ func TestGradeSubmission(t *testing.T) {
 			}`,
 			setupUserMock:       func(m *mocks.MockUserService) {},
 			setupSubmissionMock: func(m *mocks.MockSubmissionService) {},
+			setupAwsMock:        func(m *mocks.MockAWSService) {},
 			expectedStatus:      http.StatusBadRequest,
 			expectedBody:        `{"error":"Invalid course ID"}`,
 			checkBody:           true,
@@ -290,6 +299,7 @@ func TestGradeSubmission(t *testing.T) {
 			}`,
 			setupUserMock:       func(m *mocks.MockUserService) {},
 			setupSubmissionMock: func(m *mocks.MockSubmissionService) {},
+			setupAwsMock:        func(m *mocks.MockAWSService) {},
 			expectedStatus:      http.StatusBadRequest,
 			expectedBody:        `{"error":"Invalid request body"}`,
 			checkBody:           true,
@@ -310,6 +320,9 @@ func TestGradeSubmission(t *testing.T) {
 			},
 			setupSubmissionMock: func(m *mocks.MockSubmissionService) {
 				m.On("GradeSubmission", mock.Anything, mock.Anything, "instructor1", mock.Anything).Return(nil, errors.ErrSubmissionNotFound)
+			},
+			setupAwsMock: func(m *mocks.MockAWSService) {
+				// No need to mock AWS service since the service function returns error before AWS call
 			},
 			expectedStatus: http.StatusNotFound,
 			expectedBody:   `{"error":"Submission not found"}`,
@@ -332,8 +345,43 @@ func TestGradeSubmission(t *testing.T) {
 			setupSubmissionMock: func(m *mocks.MockSubmissionService) {
 				m.On("GradeSubmission", mock.Anything, mock.Anything, "instructor1", mock.Anything).Return(nil, errors.ErrGradingSubmissionFailed)
 			},
+			setupAwsMock: func(m *mocks.MockAWSService) {
+				// No need to mock AWS service since the service function returns error before AWS call
+			},
 			expectedStatus: http.StatusInternalServerError,
 			expectedBody:   `{"error":"Error grading submission"}`,
+			checkBody:      true,
+		},
+		{
+			name:     "SNS Notification Failed",
+			username: "instructor1",
+			courseID: "1",
+			gradeRequestBody: `{
+				"assignment_id": 1,
+				"user_id": 1,
+				"course_id": 1,
+				"grade": 90,
+				"feedback": "Well done!"
+			}`,
+			setupUserMock: func(m *mocks.MockUserService) {
+				// No need to mock any user service methods
+			},
+			setupSubmissionMock: func(m *mocks.MockSubmissionService) {
+				m.On("GradeSubmission", mock.Anything, mock.Anything, "instructor1", mock.Anything).Return(&dtos.GradeSubmissionResponseDTO{
+					AssignmentID: 1,
+					CourseID:     1,
+					UserID:       1,
+					Grade:        90,
+					Feedback:     "Well done!",
+				}, nil)
+			},
+			setupAwsMock: func(m *mocks.MockAWSService) {
+				// Mock AWS SNS notification call to fail
+				expectedMessage := "Submission graded: 1 for user: instructor1"
+				m.On("PushNotificationToSNS", mock.Anything, mock.Anything, expectedMessage).Return(errors.ErrSNSNotificationFailed)
+			},
+			expectedStatus: http.StatusInternalServerError,
+			expectedBody:   `{"error":"failed to send SNS notification"}`,
 			checkBody:      true,
 		},
 	}
@@ -343,12 +391,14 @@ func TestGradeSubmission(t *testing.T) {
 			// Setup mock services
 			mockSubmissionService := new(mocks.MockSubmissionService)
 			mockUserService := new(mocks.MockUserService)
+			mockAwsService := new(mocks.MockAWSService)
 
 			tc.setupUserMock(mockUserService)
 			tc.setupSubmissionMock(mockSubmissionService)
+			tc.setupAwsMock(mockAwsService)
 
 			// Create controller
-			submissionController := controllers.NewSubmissionController(mockSubmissionService, mockUserService, logger)
+			submissionController := controllers.NewSubmissionController(mockSubmissionService, mockUserService, mockAwsService, logger)
 
 			// Setup router with middleware to set username
 			router := gin.New()
@@ -386,6 +436,7 @@ func TestGradeSubmission(t *testing.T) {
 			// Verify mock expectations were met
 			mockUserService.AssertExpectations(t)
 			mockSubmissionService.AssertExpectations(t)
+			mockAwsService.AssertExpectations(t)
 		})
 	}
 }
