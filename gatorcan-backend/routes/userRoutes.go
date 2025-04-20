@@ -63,7 +63,7 @@ func UserRoutes(userController *controllers.UserController,
 	}
 
 	courseGroup := router.Group("/courses")
-	courseGroup.Use(middleware.AuthMiddleware(logger, string(models.Student), string(models.Admin)))
+	courseGroup.Use(middleware.AuthMiddleware(logger, string(models.Student), string(models.Admin), string(models.Instructor)))
 	{
 		courseGroup.GET("/enrolled", func(c *gin.Context) {
 			courseController.GetEnrolledCourses(c)

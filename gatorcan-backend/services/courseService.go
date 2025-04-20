@@ -76,20 +76,37 @@ func (s *CourseServiceImpl) GetEnrolledCourses(ctx context.Context, logger *log.
 }
 
 func (s *CourseServiceImpl) GetCourses(ctx context.Context, logger *log.Logger, username string, page int, pageSize int) ([]dtos.CourseResponseDTO, error) {
-	_, err := s.userRepo.GetUserByUsername(ctx, username)
+	user, err := s.userRepo.GetUserByUsername(ctx, username)
 	if err != nil {
-		logger.Printf("user not found: %s %d", username, 404)
+		logger.Printf("user not found: %s", username)
 		return nil, errors.ErrUserNotFound
 	}
 
-	// Fetch courses using pagination
+	// Check if the user has the "instructor" role
+	isInstructor := false
+	for _, role := range user.Roles {
+		if role.Name == "instructor" {
+			isInstructor = true
+			break
+		}
+	}
+
+	if isInstructor {
+		courses, err := s.courseRepo.GetInstructorCourses(ctx, user.ID, page, pageSize)
+		if err != nil {
+			logger.Printf("Failed to fetch courses for instructor: %s", username)
+			return nil, errors.ErrFailedToFetch
+		}
+		return dtos.ConvertToCourseResponseDTOs(courses), nil
+	}
+
+	// Else fetch general paginated courses
 	courses, err := s.courseRepo.GetCourses(ctx, page, pageSize)
 	if err != nil {
 		logger.Printf("Failed to fetch courses for page %d with pageSize %d: %v", page, pageSize, err)
 		return nil, errors.ErrFailedToFetch
 	}
 
-	// Convert courses using DTO function
 	return dtos.ConvertToCourseResponseDTOs(courses), nil
 }
 
