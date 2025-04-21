@@ -75,6 +75,7 @@ type SubmissionRepository interface {
 	GetSubmission(ctx context.Context, courseID int, assignmentID int, userID uint) (*models.Submission, error)
 	GetSubmissions(ctx context.Context, courseID int, assignmentID int) ([]dtos.SubmissionsResponseDTO, error)
 	GetGrades(ctx context.Context, courseID int, userID uint, count int) ([]dtos.GradeResponseDTO, error)
+	Submit(ctx context.Context, userID uint, assignmentID uint, courseID uint) error
 }
 
 type SubmissionService interface {
@@ -82,6 +83,7 @@ type SubmissionService interface {
 	GetSubmission(ctx context.Context, courseID int, assignmentID int, userID uint) (*dtos.SubmissionResponseDTO, error)
 	GetSubmissions(ctx context.Context, courseID int, assignmentID int) ([]dtos.SubmissionsResponseDTO, error)
 	GetGrades(ctx context.Context, logger *log.Logger, courseID int, userID uint) ([]dtos.GradeResponseDTO, error)
+	Submit(ctx context.Context, logger *log.Logger, userID uint, courseID uint, assignmentID uint) error
 }
 
 type AiServiceService interface {

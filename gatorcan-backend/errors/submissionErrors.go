@@ -17,4 +17,6 @@ var (
 	ErrGrading                             = errors.New("grading error")
 	ErrFetchingGrades                      = errors.New("error fetching grades")
 	ErrFetchingSubmissions                 = errors.New("error fetching submissions")
+	ErrSubmittingAssignment                = errors.New("error submitting assignment")
+	ErrAssignmentFileNotFound              = errors.New("assignment file not found")
 )

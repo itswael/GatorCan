@@ -106,3 +106,11 @@ func (s *SubmissionServiceImpl) GetGrades(ctx context.Context, logger *log.Logge
 
 	return grades, nil
 }
+
+func (s *SubmissionServiceImpl) Submit(ctx context.Context, logger *log.Logger, userID uint, assignmentID uint, courseID uint) error {
+	err := s.submissionRepo.Submit(ctx, userID, assignmentID, courseID)
+	if err != nil {
+		return errors.ErrSubmittingAssignment
+	}
+	return nil
+}
