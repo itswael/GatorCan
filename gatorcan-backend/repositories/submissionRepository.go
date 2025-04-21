@@ -16,6 +16,7 @@ type SubmissionRepository interface {
 	GetSubmission(ctx context.Context, courseID int, assignmentID int, userID uint) (*models.Submission, error)
 	GetSubmissions(ctx context.Context, courseID int, assignmentID int) ([]dtos.SubmissionsResponseDTO, error)
 	GetGrades(ctx context.Context, courseID int, userID uint, count int) ([]dtos.GradeResponseDTO, error)
+	Submit(ctx context.Context, userID uint, assignmentID uint, courseID uint) error
 }
 
 type submissionRepository struct {
@@ -123,4 +124,54 @@ func (s *submissionRepository) GetSubmissions(ctx context.Context, courseID int,
 	}
 
 	return submissions, nil
+}
+
+func (s *submissionRepository) Submit(ctx context.Context, userID uint, assignmentID uint, courseID uint) error {
+	// select a.file_name, a.file_url, a.file_type
+	// from assignment_files a
+	// where a.id in (select assignment_file_id from user_assignment_files where user_id = ?)
+	type assignmentData struct {
+		FileName string `json:"file_name"`
+		FileURL  string `json:"file_url"`
+		FileType string `json:"file_type"`
+	}
+	var data []assignmentData
+	if err := s.db.WithContext(ctx).
+		Raw(`
+				SELECT 
+					a.file_name, 
+					a.file_url, 
+					a.file_type
+				FROM 
+					assignment_files a 
+					INNER JOIN user_assignment_files uaf ON a.id = uaf.assignment_file_id
+				WHERE 
+					uaf.user_id = ?
+			`, userID).Scan(&data).Error; err != nil {
+		log.Printf("Error submitting assignment: %v", err)
+		return errors.ErrSubmittingAssignment
+	}
+
+	// Check if data is empty
+	if len(data) == 0 {
+		return errors.ErrAssignmentFileNotFound
+	}
+
+	// Save data to database
+	for _, d := range data {
+		submission := models.Submission{
+			AssignmentID: assignmentID,
+			CourseID:     courseID,
+			UserID:       userID,
+			File_name:    d.FileName,
+			File_url:     d.FileURL,
+			File_type:    d.FileType,
+			Updated_at:   time.Now(),
+		}
+		if err := s.db.WithContext(ctx).Create(&submission).Error; err != nil {
+			log.Printf("Error submitting assignment: %v", err)
+			return errors.ErrSubmittingAssignment
+		}
+	}
+	return nil
 }
