@@ -1,0 +1,14 @@
+# Environment files (keep secrets out)
+.env
+.env.*
+
+# OS & IDE junk
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode
+.idea
+
+# Misc
+coverage
