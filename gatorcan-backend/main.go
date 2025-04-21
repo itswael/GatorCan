@@ -10,6 +10,7 @@ import (
 	"gatorcan-backend/services"
 	"gatorcan-backend/utils"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -23,9 +24,12 @@ func main() {
 
 	logger.Println("Application started")
 
-	env_err := godotenv.Load()
-	if env_err != nil {
-		logger.Fatalf("Error loading .env file: %v", env_err)
+	// In production or Docker, skip loading .env
+	if os.Getenv("ENVIRONMENT") != "docker" {
+		env_err := godotenv.Load()
+		if env_err != nil {
+			logger.Fatalf("Error loading .env file: %v", env_err)
+		}
 	}
 
 	// Load configuration
@@ -60,6 +64,9 @@ func main() {
 		logger.Fatalf("Failed to migrate database: %v", err)
 	}
 
+	if err := database.SeedUsers(db); err != nil {
+		logger.Fatalf("Failed to seed users: %v", err)
+	}
 	// Initialize repositories
 	userRepo := repositories.NewUserRepository(db)
 	courseRepo := repositories.NewCourseRepository(db)
