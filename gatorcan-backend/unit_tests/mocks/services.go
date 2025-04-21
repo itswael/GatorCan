@@ -149,6 +149,11 @@ func (m *MockSubmissionService) GetGrades(ctx context.Context, logger *log.Logge
 	return args.Get(0).([]dtos.GradeResponseDTO), args.Error(1)
 }
 
+func (m *MockSubmissionService) Submit(ctx context.Context, logger *log.Logger, userID uint, courseID uint, assignmentID uint) error {
+	args := m.Called(ctx, logger, userID, courseID, assignmentID)
+	return args.Error(0)
+}
+
 func (m *MockAssignmentService) UpsertAssignment(ctx context.Context, logger *log.Logger, assignment *dtos.CreateOrUpdateAssignmentRequestDTO) (dtos.AssignmentResponseDTO, error) {
 	args := m.Called(ctx, logger, assignment)
 	return args.Get(0).(dtos.AssignmentResponseDTO), args.Error(1)
