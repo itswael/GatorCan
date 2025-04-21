@@ -1,0 +1,74 @@
+# Stage 1: Build - Use Debian Bookworm which has newer GLIBC
+FROM golang:1.23.5-bookworm AS builder
+
+WORKDIR /app
+
+# Install SQLite development libraries
+RUN apt-get update && apt-get install -y sqlite3 libsqlite3-dev
+
+# Accept environment variables as build arguments
+ARG ADMIN_USER
+ARG ADMIN_PASSWORD
+ARG AWS_REGION
+ARG AWS_TOPIC_ARN
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY
+ARG AWS_SESSION_TOKEN
+
+# Set environment variables inside the container
+ENV ADMIN_USER=$ADMIN_USER
+ENV ADMIN_PASSWORD=$ADMIN_PASSWORD
+ENV AWS_REGION=$AWS_REGION
+ENV AWS_TOPIC_ARN=$AWS_TOPIC_ARN
+ENV AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+ENV AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+ENV AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
+ENV ENVIRONMENT=docker
+
+# Copy Go mod files and download dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+# Build the Go application with CGO enabled
+RUN CGO_ENABLED=1 go build -o app .
+
+# Stage 2: Runtime - Use a slim Debian image
+FROM debian:bookworm-slim
+
+# Install runtime dependencies for SQLite
+RUN apt-get update && apt-get install -y sqlite3 libsqlite3-0 ca-certificates && rm -rf /var/lib/apt/lists/*
+
+# Accept environment variables as build arguments
+ARG ADMIN_USER
+ARG ADMIN_PASSWORD
+ARG AWS_REGION
+ARG AWS_TOPIC_ARN
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY
+ARG AWS_SESSION_TOKEN
+
+# Set environment variables inside the container
+ENV ADMIN_USER=$ADMIN_USER
+ENV ADMIN_PASSWORD=$ADMIN_PASSWORD
+ENV AWS_REGION=$AWS_REGION
+ENV AWS_TOPIC_ARN=$AWS_TOPIC_ARN
+ENV AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+ENV AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+ENV AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN
+ENV ENVIRONMENT=docker
+
+WORKDIR /root/
+
+# Copy the binary from the build stage
+COPY --from=builder /app/app .
+
+# Ensure executable permissions
+RUN chmod +x ./app
+
+# Expose port for the app
+EXPOSE 8080
+
+# Run the Go app
+CMD ["./app"]
