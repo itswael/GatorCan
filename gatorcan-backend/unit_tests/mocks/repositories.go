@@ -236,3 +236,8 @@ func (m *MockSubmissionRepository) GetGrades(ctx context.Context, courseID int, 
 	args := m.Called(ctx, courseID, userID, assignmentID)
 	return args.Get(0).([]dtos.GradeResponseDTO), args.Error(1)
 }
+
+func (m *MockSubmissionRepository) Submit(ctx context.Context, userID uint, assignmentID uint, courseID uint) error {
+	args := m.Called(ctx, userID, assignmentID, courseID)
+	return args.Error(0)
+}

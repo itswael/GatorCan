@@ -18,11 +18,11 @@ type Submission struct {
 	File_url     string     `json:"file_url"`
 	File_name    string     `json:"file_name"`
 	File_type    string     `json:"file_type"`
-	Grade        int        `json:"grade"`
+	Grade        int        `json:"grade" gorm:"default:NULL"`
 	Feedback     string     `json:"feedback"`
 	Created_at   time.Time  `json:"created_at" gorm:"default:CURRENT_TIMESTAMP"`
 	Updated_at   time.Time  `json:"updated_at" gorm:"default:CURRENT_TIMESTAMP"`
-	Deleted_at   time.Time  `json:"deleted_at" gorm:"default:CURRENT_TIMESTAMP"`
+	Deleted_at   time.Time  `json:"deleted_at" gorm:"default:NULL"`
 	Assignment   Assignment `gorm:"foreignKey:AssignmentID"`
 	User         User       `gorm:"foreignKey:UserID"`
 	Course       Course     `gorm:"foreignKey:CourseID"`
