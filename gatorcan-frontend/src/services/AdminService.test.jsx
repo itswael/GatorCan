@@ -18,7 +18,7 @@ describe("AdminService", () => {
 
     expect(result).toEqual({ success: true });
     expect(axios.post).toHaveBeenCalledWith(
-      "http://localhost:8080/admin/add_user",
+      "http://gatorcan-backend.us-east-2.elasticbeanstalk.com/admin/add_user",
       {
         username: "testuser",
         password: "password123",
@@ -42,7 +42,7 @@ describe("AdminService", () => {
 
     expect(result).toEqual({ success: true });
     expect(axios.delete).toHaveBeenCalledWith(
-      "http://localhost:8080/admin/testuser",
+      "http://gatorcan-backend.us-east-2.elasticbeanstalk.com/admin/testuser",
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: expect.stringContaining("Bearer "),
@@ -61,7 +61,7 @@ describe("AdminService", () => {
 
     expect(result).toEqual({ success: true });
     expect(axios.put).toHaveBeenCalledWith(
-      "http://localhost:8080/admin/update_role",
+      "http://gatorcan-backend.us-east-2.elasticbeanstalk.com/admin/update_role",
       {
         username: "testuser",
         roles: ["admin", "user"],

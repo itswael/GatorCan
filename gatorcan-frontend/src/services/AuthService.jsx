@@ -1,7 +1,7 @@
 import axios from "axios";
 import {jwtDecode} from "jwt-decode";
 
-const base_url = "http://localhost:8080/";
+const base_url = "http://gatorcan-backend.us-east-2.elasticbeanstalk.com/";
 
 export const login = async (username, password) => {
   const login_url = base_url + "login";
