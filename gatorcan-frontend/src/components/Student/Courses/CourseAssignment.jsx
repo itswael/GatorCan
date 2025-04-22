@@ -9,6 +9,7 @@ import {
   fetchAssignmentDetails,
   submitAssignmentFile,
   fetchAssignmentSubmissionDetails,
+  submitAssignment,
 } from "../../../services/CourseService";
 import s3Client from "../../../awsConfig";
 import { PutObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
@@ -188,6 +189,15 @@ function Submission({ id, assignment }) {
       setFile(file_param);
       setFileInfo({ url: fileUrl, name: file_param.name });
 
+      await submitAssignmentFile({
+        course_id: id,
+        assignment_id: assignment.id,
+        data: {
+          file_url: fileUrl,
+          filename: file_param.name,
+          file_type: "pdf",
+        },
+      });
     } catch (error) {
       console.error("Upload failed:", error);
     } finally {
@@ -206,6 +216,16 @@ function Submission({ id, assignment }) {
     if (!fileInfo) return;
 
     setSubmitting(true);
+
+    await submitAssignment({
+      course_id: id,
+      assignment_id: assignment.id,
+      data: {
+        file_url: fileInfo.url,
+        filename: fileInfo.name,
+        file_type: "pdf",
+      },
+    });
 
     // No re-fetch — update locally
     setSubmittedData({
