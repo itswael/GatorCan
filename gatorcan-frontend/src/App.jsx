@@ -6,6 +6,17 @@ import ProtectedDashboard from "./components/ProtectedDashboard";
 import AdminDashboard from "./components/Admin/AdminDashboard";
 import StudentDashboard from "./components/Student/StudentDashboard";
 import InstructorDashboard from "./components/Instructor/InstructorDashboard";
+import InstructorProfile from "./components/Instructor/InstructorProfile";
+import InstructorChat from "./components/Instructor/InstructorChat";
+import InstructorCourseHome from "./components/Instructor/Courses/InstructorCourseHome";
+import InstructorCourseSyllabus from "./components/Instructor/Courses/InstructorCourseSyllabus";
+import InstructorCourseAssignments from "./components/Instructor/Courses/Assignments/InstructorCourseAssignments";
+import InstructorCourseAssignmentEdit from "./components/Instructor/Courses/Assignments/InstructorCourseAssignmentEdit";
+import InstructorCourseAssignmentHome from "./components/Instructor/Courses/Assignments/InstructorCourseAssignmentHome";
+import InstructorCourseAssignmentViewSubmissions from "./components/Instructor/Courses/Assignments/InstructorCourseAssignmentViewSubmissions";
+import InstructorCourseAnnouncements from "./components/Instructor/Courses/InstructorCourseAnnouncements";
+import InstructorCourseDiscussions from "./components/Instructor/Courses/InstructorCourseDiscussions";
+import InstructorCourseStatistics from "./components/Instructor/Courses/InstructorCourseStatistics";
 import StudentCalendar from "./components/Student/StudentCalendar";
 import StudentInbox from "./components/Student/StudentInbox";
 import StudentProfile from "./components/Student/StudentProfile";
@@ -58,6 +69,114 @@ function App() {
         element={
           <ProtectedDashboard allowedRoles={["instructor"]}>
             <InstructorDashboard />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="instructor-profile"
+        element={
+          <ProtectedDashboard allowedRoles={["instructor"]}>
+            <InstructorProfile />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="instructor-chat"
+        element={
+          <ProtectedDashboard allowedRoles={["instructor"]}>
+            <InstructorChat />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="instructor-courses/:id/home"
+        element={
+          <ProtectedDashboard allowedRoles={["instructor"]}>
+            <InstructorCourseHome />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="instructor-courses/:id/syllabus/"
+        element={
+          <ProtectedDashboard allowedRoles={["instructor"]}>
+            <InstructorCourseSyllabus />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="instructor-courses/:id/assignments/"
+        element={
+          <ProtectedDashboard allowedRoles={["instructor"]}>
+            <InstructorCourseAssignments />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="instructor-courses/:id/assignments/edit-assignment"
+        element={
+          <ProtectedDashboard allowedRoles={["instructor"]}>
+            <InstructorCourseAssignmentEdit />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="instructor-courses/:id/assignments/:assignment_id/edit-assignment"
+        element={
+          <ProtectedDashboard allowedRoles={["instructor"]}>
+            <InstructorCourseAssignmentEdit />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="instructor-courses/:id/assignments/:assignment_id"
+        element={
+          <ProtectedDashboard allowedRoles={["instructor"]}>
+            <InstructorCourseAssignmentHome />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="instructor-courses/:id/assignments/:assignment_id/view-submissions"
+        element={
+          <ProtectedDashboard allowedRoles={["instructor"]}>
+            <InstructorCourseAssignmentViewSubmissions />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="instructor-courses/:id/announcements/"
+        element={
+          <ProtectedDashboard allowedRoles={["instructor"]}>
+            <InstructorCourseAnnouncements />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="instructor-courses/:id/discussions/"
+        element={
+          <ProtectedDashboard allowedRoles={["instructor"]}>
+            <InstructorCourseDiscussions />
+          </ProtectedDashboard>
+        }
+      />
+
+      <Route
+        path="instructor-courses/:id/statistics/"
+        element={
+          <ProtectedDashboard allowedRoles={["instructor"]}>
+            <InstructorCourseStatistics />
           </ProtectedDashboard>
         }
       />
