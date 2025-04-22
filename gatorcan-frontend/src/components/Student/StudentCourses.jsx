@@ -5,17 +5,48 @@ import CourseService from "../../services/CourseService";
 function StudentCourses() {
   const [allCourses, setAllCourses] = useState([]);
   const [enrolledCourses, setEnrolledCourses] = useState([]);
+  const [recommendedCourses, setRecommendedCourses] = useState([]);
   const [loadingAllCourses, setLoadingAllCourses] = useState(true);
   const [loadingEnrolledCourses, setLoadingEnrolledCourses] = useState(true);
+  const [loadingCourseRecommendations, setLoadingCourseRecommendations] = useState(true);
 
   useEffect(() => {
     loadCourses();
     loadEnrolledCourses();
+    loadRecommendations();
   }, []);
+
+  const loadRecommendations = async () => {
+    try {
+      setLoadingCourseRecommendations(true);
+
+      // Get list of recommended courses
+      const recommendations = await CourseService.fetchCourseRecommentations();
+
+      if (!recommendations || recommendations.length === 0) {
+        setRecommendedCourses([]);
+        return;
+      }
+
+      // For each recommendation, fetch full course details in parallel
+      const fullCourses = await Promise.all(
+        recommendations.map((rec) => CourseService.fetchCourse({ id: rec.id }))
+      );
+
+      // Store the full course objects
+      setRecommendedCourses(fullCourses);
+    } catch (error) {
+      console.error("Failed to load recommended courses:", error);
+    } finally {
+      setLoadingCourseRecommendations(false);
+    }
+  };
 
   const loadCourses = async () => {
     setLoadingAllCourses(true);
     const courses = await CourseService.fetchAllCourses();
+    console.log("all courses");
+    console.log(courses);
     setAllCourses(courses || []);
     setLoadingAllCourses(false);
   };
@@ -23,6 +54,8 @@ function StudentCourses() {
   const loadEnrolledCourses = async () => {
     setLoadingEnrolledCourses(true);
     const courses = await CourseService.fetchEnrolledCourses();
+    console.log("enrolled courses");
+    console.log(courses);
     setEnrolledCourses(courses);
     setLoadingEnrolledCourses(false);
   };
@@ -31,6 +64,7 @@ function StudentCourses() {
     const result = await CourseService.enrollInCourse(courseID);
     if (result.success) {
       loadEnrolledCourses();
+      loadRecommendations();
     }
   };
 
@@ -52,6 +86,30 @@ function StudentCourses() {
         <h1>Courses</h1>
         <hr />
 
+        <h3>Course Recommendations</h3>
+        <hr />
+        {loadingCourseRecommendations ? (
+          <p>Loading recommendations...</p>
+        ) : enrolledCourses.length === 0 ? (
+          <p>Choose more courses to see recommendations</p>
+        ) : (
+          <div className="grid-container">
+            {recommendedCourses != null && recommendedCourses.length > 0 ? (
+              <>
+                {recommendedCourses.map((course, index) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    enrollInCourse={handleEnroll}
+                    color={colors[index + (42 % colors.length)]}
+                  />
+                ))}
+              </>
+            ) : (
+              <p>Enroll in courses to see recommendations</p>
+            )}
+          </div>
+        )}
         <h3>All Courses</h3>
         <hr />
         {loadingAllCourses ? (
@@ -146,14 +204,20 @@ const CourseCard = ({ course, enrollInCourse, isEnrolled = false, color }) => {
           color: "#555",
         }}
       >
-        <span>
-          <strong>Created:</strong>{" "}
-          {new Date(course.created_at).toLocaleDateString()}
-        </span>
-        <span>
-          <strong>Updated:</strong>{" "}
-          {new Date(course.updated_at).toLocaleDateString()}
-        </span>
+        {course.created_at == null ? (
+          <></>
+        ) : (
+          <>
+            <span>
+              <strong>Created:</strong>{" "}
+              {new Date(course.created_at).toLocaleDateString()}
+            </span>
+            <span>
+              <strong>Updated:</strong>{" "}
+              {new Date(course.updated_at).toLocaleDateString()}
+            </span>
+          </>
+        )}
       </div>
 
       {isEnrolled ? (
