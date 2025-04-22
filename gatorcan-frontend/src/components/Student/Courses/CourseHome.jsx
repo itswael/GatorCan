@@ -9,7 +9,7 @@ import { useParams } from "react-router-dom";
 import { fetchCourse } from "../../../services/CourseService";
 import CourseNavbar from "./CourseNavbar";
 import "react-chat-widget/lib/styles.css";
-import ChatBox from "../../ChatBox";
+import ChatBox from "./ChatBox";
 
 
 function CourseHome() {
@@ -23,7 +23,7 @@ function CourseHome() {
   const [errMessage, setErrMessage] = useState("");
 
   let { id } = useParams();
-  console.log(id);
+  console.log("id: " + id);
 
   const loremText =
     `Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. \nDonec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo.
@@ -54,7 +54,7 @@ Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit am
 
   return (
     <>
-    <ChatBox />
+    <ChatBox course_id={id} />
       <StudentNavbar />
       <div style={{ marginLeft: "100px" }}>
         <Box sx={{ display: "flex", height: "100vh" }}>
