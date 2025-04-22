@@ -5,6 +5,8 @@ DOCKERFILE = Dockerfile.gatorcan_frontend
 IMAGE_NAME = gatorcan-frontend
 CONTAINER_NAME = gatorcan-frontend-container
 PORT = 3000
+ECR_REPO = gatorcan
+ECR_TAG = frontend
 
 # Load env vars from .env file
 include .env
@@ -35,3 +37,17 @@ stop:
 clean: stop
 	@echo "Removing image: $(IMAGE_NAME)"
 	docker rmi $(IMAGE_NAME) || true
+
+push-to-ecr:
+	@echo "Pushing image to ECR"
+	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 335257738167.dkr.ecr.us-east-2.amazonaws.com
+	docker tag $(IMAGE_NAME) 335257738167.dkr.ecr.us-east-2.amazonaws.com/$(ECR_REPO):$(ECR_TAG)
+	docker push 335257738167.dkr.ecr.us-east-2.amazonaws.com/$(ECR_REPO):$(ECR_TAG)
+
+run-from-ecr:
+	@echo "Running container from ECR"
+	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 335257738167.dkr.ecr.us-east-2.amazonaws.com
+	docker pull 335257738167.dkr.ecr.us-east-2.amazonaws.com/$(ECR_REPO):$(ECR_TAG)
+	docker run -d --name $(CONTAINER_NAME) \
+		-p $(PORT):80 \
+		335257738167.dkr.ecr.us-east-2.amazonaws.com/$(ECR_REPO):$(ECR_TAG)

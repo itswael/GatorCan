@@ -1,0 +1,14 @@
+{
+    "AWSEBDockerrunVersion": "1",
+    "Image": {
+      "Name": "335257738167.dkr.ecr.us-east-2.amazonaws.com/gatorcan:backend",
+      "Update": "true"
+    },
+    "Ports": [
+      {
+        "ContainerPort": 8080,
+        "HostPort": 8080
+      }
+    ],
+    "Logging": "/var/log/nginx"
+}
