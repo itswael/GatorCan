@@ -5,9 +5,12 @@ import { useState } from "react";
 import { Box, Typography, Button } from "@mui/material";
 import { useParams } from "react-router-dom";
 import CourseNavbar from "./CourseNavbar";
-import { fetchAssignmentDetails } from "../../../services/CourseService";
+import {
+  fetchAssignmentDetails,
+} from "../../../services/CourseService";
 import s3Client from "../../../awsConfig";
 import { PutObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 function CourseAssignment() {
 
@@ -125,49 +128,126 @@ function AssignmentDetails({ id, assignment }) {
 }
 
 function Submission({ id, assignment }) {
-
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submittedData, setSubmittedData] = useState(null);
+  const [fileInfo, setFileInfo] = useState(null);
+  const [assignmentDetails, setAssignmentDetails] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [errMessage, setErrMessage] = useState("");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const assignmentData = await fetchAssignmentDetails({
+        id,
+        assignment_id: assignment.id,
+      });
+      if (assignmentData != null) {
+        console.log(assignmentData.assignments);
+        setAssignmentDetails(assignmentData);
+      } else {
+        setErrMessage("Unable to fetch assignments, retry");
+      }
+
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
 
   const uploadFile = async (file_param) => {
-  
-      setUploading(true);
-      setMessage("");
-  
-      // Convert file to an ArrayBuffer
+    setUploading(true);
+
+    try {
       const arrayBuffer = await file_param.arrayBuffer();
-      const fileBuffer = new Uint8Array(arrayBuffer); // Convert to Uint8Array
-  
+      const fileBuffer = new Uint8Array(arrayBuffer);
+
       const params = {
         Bucket: import.meta.env.VITE_S3_BUCKET_NAME,
         Key: file_param.name,
         Body: fileBuffer,
         ContentType: file_param.type,
       };
-  
-      try {
-        const command = new PutObjectCommand(params);
-        console.log("Sending upload request...");
-        const response = await s3Client.send(command);
-        console.log("Upload completed:", response);
-        setMessage("Upload successful!");
-      } catch (error) {
-        setMessage(`Upload failed: ${error.message}..retry`);
-      } finally {
-        setUploading(false);
-      }
-    };
 
-  const handleSubmit = async () => {
-    // TODO: handle assignment submission
-  }
+      const command = new PutObjectCommand(params);
+      await s3Client.send(command);
+
+      const fileUrl = `https://d8t4c0gsca730.cloudfront.net/${encodeURIComponent(
+        params.Key
+      )}`;
+      setFile(file_param);
+      setFileInfo({ url: fileUrl, name: file_param.name });
+
+    } catch (error) {
+      console.error("Upload failed:", error);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleFileChange = (event) => {
-    setFile(event.target.files[0]);
-    uploadFile(event.target.files[0]);
-    console.log("Assignment submitted");
+    const selectedFile = event.target.files[0];
+    if (selectedFile) {
+      uploadFile(selectedFile);
+    }
   };
+
+  const handleSubmit = async () => {
+    if (!fileInfo) return;
+
+    setSubmitting(true);
+
+    // No re-fetch — update locally
+    setSubmittedData({
+      file_url: fileInfo.url,
+      filename: fileInfo.name,
+      submitted_at: new Date().toISOString(),
+      grade: 0,
+      feedback: "",
+    });
+
+    setSubmitting(false);
+  };
+
+  if (submittedData != null) {
+    const submittedDate = new Date(submittedData.submitted_at).toLocaleString();
+    const fileName = submittedData.file_url.split("/").pop();
+
+    return (
+      <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+        <Typography variant="h4" fontWeight="bold">
+          Submission
+        </Typography>
+        <Typography variant="body1" sx={{ mt: 2 }}>
+          Submitted on: {submittedDate}
+        </Typography>
+        <Typography variant="body1" sx={{ mt: 1 }}>
+          Grade: {submittedData.grade == 0 ? "N/A" : submittedData.grade}
+        </Typography>
+        <Typography variant="body1" sx={{ mt: 1 }}>
+          Feedback: {submittedData.feedback || "N/A"}
+        </Typography>
+        {submittedData.file_url != null ? (
+          <>
+            <Button
+              href={submittedData.file_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{ mt: 2 }}
+              variant="outlined"
+            >
+              {fileName}
+            </Button>
+          </>
+        ) : (
+          <></>
+        )}
+        <Box sx={{ mt: 2 }}>
+          <CheckCircleIcon sx={{ color: "green", fontSize: 32 }} />
+        </Box>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -180,109 +260,60 @@ function Submission({ id, assignment }) {
         justifyContent: "space-between",
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Typography variant="h4" sx={{ fontWeight: "bold", textAlign: "left" }}>
-          Submission
-        </Typography>
-      </Box>
+      <Typography variant="h4" fontWeight="bold">
+        Submission
+      </Typography>
+      <Typography variant="body1" sx={{ mt: 2 }}>
+        Guidelines: No additional details were added for this assignment.
+      </Typography>
 
-      <Box sx={{ marginTop: "10px", textAlign: "left" }}>
-        <Typography variant="body1">
-          Guidelines: No additional details were added for this assignment.
-        </Typography>
-      </Box>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          marginTop: "20px",
-        }}
-      >
+      <Box sx={{ display: "flex", alignItems: "center", marginTop: "20px" }}>
         <Button
           variant="contained"
           component="label"
+          disabled={uploading}
           style={{
             backgroundColor: "rgb(29, 74, 124)",
             color: "white",
             marginRight: "10px",
           }}
-          disabled={uploading}
         >
           {uploading ? "Uploading..." : "Upload File"}
-          <input
-            type="file"
-            accept=".pdf"
-            hidden
-            onChange={(event) => {
-              setMessage("");
-              handleFileChange(event);
-            }}
-          />
+          <input type="file" accept=".pdf" hidden onChange={handleFileChange} />
         </Button>
-        {file && (
-          <Typography variant="body2" sx={{ marginLeft: "10px" }}>
-            {file.name}
-          </Typography>
-        )}
-      </Box>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          marginTop: "2px",
-        }}
-      >
-        <Typography variant="body2" sx={{ color: "gray", marginLeft: "0px" }}>
-          .pdf only
-        </Typography>
-      </Box>
 
-      <Box sx={{ marginTop: "10px", textAlign: "left" }}>
-        {message && (
-          <Typography
-            variant="body2"
-            sx={{
-              color: "red",
-              marginTop: "0px",
-            }}
+        {fileInfo && (
+          <Button
+            href={fileInfo.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="text"
           >
-            {message}
-          </Typography>
+            {fileInfo.name}
+          </Button>
         )}
       </Box>
 
-      <Box
-        sx={{
-          textAlign: "center",
-          marginTop: "auto",
-        }}
-      >
+      <Typography variant="body2" sx={{ color: "gray", marginTop: "2px" }}>
+        .pdf only
+      </Typography>
+
+      <Box sx={{ textAlign: "center", marginTop: "auto" }}>
         <Button
           onClick={handleSubmit}
+          disabled={!fileInfo || submitting}
           style={{
             backgroundColor: "rgb(29, 74, 124)",
             color: "white",
-            border: "none",
             padding: "8px 16px",
             cursor: "pointer",
           }}
         >
-          Submit
+          {submitting ? "Submitting..." : "Submit"}
         </Button>
       </Box>
 
-      <Box
-        sx={{
-          marginTop: "20px",
-          textAlign: "left",
-        }}
-      >
+      <Box sx={{ marginTop: "20px", textAlign: "left" }}>
         <Typography variant="body2" sx={{ color: "gray" }}>
           Note: Ensure your file is named appropriately before uploading.
         </Typography>
