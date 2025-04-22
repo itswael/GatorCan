@@ -3,6 +3,8 @@
 
 IMAGE_NAME = gatorcan_backend
 IMAGE_TAG = main
+ECR_REPO = gatorcan
+ECR_TAG = backend
 
 # Build the Docker image with environment variables passed as build args
 build:
@@ -38,3 +40,8 @@ pull:
 
 test:
 	docker run --env-file .env -p 8080:8080 --rm muthu1729/muthu:$(IMAGE_NAME)_$(IMAGE_TAG)
+
+push-to-ecr:
+	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 335257738167.dkr.ecr.us-east-2.amazonaws.com
+	docker tag muthu1729/muthu:$(IMAGE_NAME)_$(IMAGE_TAG) 335257738167.dkr.ecr.us-east-2.amazonaws.com/$(ECR_REPO):$(ECR_TAG)
+	docker push 335257738167.dkr.ecr.us-east-2.amazonaws.com/$(ECR_REPO):$(ECR_TAG)

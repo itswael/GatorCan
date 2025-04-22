@@ -37,3 +37,19 @@
     # Backend
       1. Muthukumaran Ulaganathan (ulaganathan.m@ufl.edu)
       2. Mohammad Wael (m.mohammadwael@ufl.edu)
+
+# Steps to Run:
+    Clone the repository
+    # Backend
+      1. cd gatorcan-backend
+      2. go mod download
+      3. go mod tidy
+      4. go build
+      5. go run main.go
+    # AIService
+      1. cd AIservice
+      2. uvicorn main:app --reload --port 8000
+    # Frontend
+      1. cd gatorcan-frontend
+      2. npm install
+      3. npm run dev
