@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const base_url = "http://localhost:8080/courses";
+const base_url = "http://gatorcan-backend.us-east-2.elasticbeanstalk.com/courses";
 
 const getAuthHeader = () => {
   const refreshToken = localStorage.getItem("refreshToken");
@@ -113,6 +113,119 @@ export const fetchAssignmentDetails = async ({ id, assignment_id }) => {
   }
 };
 
+// fetch current course
+export const fetchCourseRecommentations = async () => {
+  try {
+    const response = await axios.get(`${base_url}/recommendations`, {
+      headers: getAuthHeader(),
+    });
+
+    if (response.data === null) return [];
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching course recommendations:", error);
+    return [];
+  }
+};
+
+// submit assignment file
+export const submitAssignmentFile = async ({
+  course_id,
+  assignment_id,
+  data,
+}) => {
+  try {
+    const response = await axios.post(
+      `${base_url}/${course_id}/assignments/${assignment_id}/upload`,
+      data,
+      { headers: getAuthHeader() }
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error("Error submitting assignment file:", error);
+    return { success: false };
+  }
+};
+
+// submit assignment
+export const submitAssignment = async ({
+  course_id,
+  assignment_id,
+  data,
+}) => {
+  try {
+    const response = await axios.post(
+      `${base_url}/${course_id}/assignments/${assignment_id}/submit`,
+      data,
+      { headers: getAuthHeader() }
+    );
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error("Error submitting assignment file:", error);
+    return { success: false };
+  }
+};
+
+// fetch current course assignment submission details
+export const fetchAssignmentSubmissionDetails = async ({ cid, aid}) => {
+  try {
+    const response = await axios.get(
+      `${base_url}/${cid}/assignments/${aid}/submission`,
+      {
+        headers: getAuthHeader(),
+      }
+    );
+
+    if (response.data === null) return {success: false};
+    return {
+      success: true,
+      data: response.data
+    }
+  } catch (error) {
+    console.error("Error fetching course assignment submission details:", error);
+    return [];
+  }
+};
+
+// fetch current course assignment submissions
+export const fetchAssignmentSubmissions = async ({ cid, aid }) => {
+  try {
+    const response = await axios.get(
+      `${base_url}/${cid}/assignments/${aid}/submissions`,
+      {
+        headers: getAuthHeader(),
+      }
+    );
+
+    if (response.data === null) return { success: false };
+    return {
+      success: true,
+      data: response.data,
+    };
+  } catch (error) {
+    console.error(
+      "Error fetching course assignment submission details:",
+      error
+    );
+    return [];
+  }
+};
+
+// fetch current course grades
+export const fetchGrades = async ({id}) => {
+  try {
+    const response = await axios.get(`${base_url}/${id}/grades`, {
+      headers: getAuthHeader(),
+    });
+
+    if (response.data === null) return [];
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching course assignments:", error);
+    return [];
+  }
+};
+
 export default {
   fetchAllCourses,
   fetchEnrolledCourses,
@@ -120,4 +233,10 @@ export default {
   fetchCourse,
   fetchAssignments,
   fetchAssignmentDetails,
+  fetchCourseRecommentations,
+  submitAssignmentFile,
+  submitAssignment,
+  fetchAssignmentSubmissionDetails,
+  fetchAssignmentSubmissions,
+  fetchGrades,
 };
