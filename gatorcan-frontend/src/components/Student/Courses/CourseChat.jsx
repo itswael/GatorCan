@@ -11,7 +11,7 @@ function CourseChat() {
   const [errMessage, setErrMessage] = useState("");
 
   let { id } = useParams();
-  console.log(id);
+  console.log("id:" + id);
 
   return (
     <>
