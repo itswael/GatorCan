@@ -1,44 +1,45 @@
-# 🏆 Sprint 3 - GatorCan
+# 🏆 Sprint 4 - GatorCan
 
-## 📅 Duration: [03/04/2025] - [03/31/2025]
+## 📅 Duration: [04/01/2025] - [04/21/2025]
 
 ## Visual Demo Links
-- [Sprint 3 Integrated Demo](https://drive.google.com/file/d/1nz1pBu1L1eCL7OnUPgYRo8zwy-cdHaDi/view?usp=sharing)
+- [Sprint 4 Integrated Demo](https://drive.google.com/file/d/1LywboJhJ_LxYwHm6a4FTGKUGW-ZBsTMz/view?usp=sharing)
+
 ## API Documentation
 - [Backend API Documentation](https://github.com/itswael/GatorCan/blob/main/BackendAPIDocumentation.md)
 
 ## 🎯 Goal
-Implement the assignment submission and grading system, integrate AWS S3 for file storage, and develop a real-time course messaging feature. Ensure seamless backend-frontend integration with robust testing.
+Implement notifications using AWS SNS, add AI-powered course recommendations and NLP-based lecture summarization (optional), and prepare the application for production deployment with CI/CD and AWS monitoring.
 
 ---
 
 ## 📌 User Stories & Assignments
 
-### **🔹 Backend (Mohammad & Muthu)**
+### **🔹 Backend (Muthu & Mohammad)**
 
-#### **1️⃣ Define Database Schema for Assignments & Submissions (Mohammad)**
+#### **1️⃣ SNS for Assignments & Deadlines Notifications (Muthu)**
 - **Who:** Backend Developers
-- **Why:** To store and manage assignment details and student submissions.
-- **What:** Implement tables for assignments and submissions with necessary relationships.
+- **Why:** To inform students instantly about new assignments and upcoming deadlines.
+- **What:** Integrate AWS SNS to send notifications when assignments are created or nearing deadline.
 
-#### **2️⃣ REST APIs for Fetching and Viewing Assignments (Mohammad)**
-- **Who:** Students, Instructors
-- **Why:** To allow students to access assignments and instructors to view submissions.
-- **What:** Implement `GET /assignments` (available assignments) and `GET /assignments/submitted` (submitted assignments).
+#### **2️⃣ SNS for Grading & Announcements Notifications (Muthu)**
+- **Who:** Backend Developers
+- **Why:** To notify students about assignment grading and important course announcements.
+- **What:** Trigger SNS notifications on assignment grading and new course announcements.
 
-#### **3️⃣ File Upload for Assignment Submissions with AWS S3 (Muthu)**
-- **Who:** Students
-- **Why:** To enable students to submit assignments securely.
-- **What:** Integrate AWS S3 for secure file uploads and implement `POST /assignments/upload` API.
+#### **3️⃣ AI-Based Course Recommendations (Mohammad)**
+- **Who:** Backend Developers
+- **Why:** To enhance user experience through personalized course suggestions.
+- **What:** Implement recommendation engine based on previous enrollments and user interests. Provide `GET /recommendations` API.
 
-#### **4️⃣ Grading API for Instructors (Muthu)**
-- **Who:** Instructors
-- **Why:** To allow instructors to grade submissions.
-- **What:** Implement `POST /assignments/grade` API to update submission grades and feedback.
+#### **4️⃣ NLP-Based Lecture Summarization (Mohammad)**
+- **Who:** Backend Developers
+- **Why:** To help students quickly review lecture content.
+- **What:** Accept lecture transcript and return summarized version via `POST /summarize` API using basic NLP techniques.
 
-#### **✅ Unit Tests and Functional Tests for Backend (Mohammad & Muthu)**
+#### **✅ Unit Tests and Functional Tests for Backend (Muthu & Mohammad)**
 ##### **Unit Tests:**
-###### Sprint 2 Unit Tests
+###### Sprint 3 Unit Tests
 - courseController -> Mocking courseService
     tests the controller functions like getCourse, getEnrolledCourse etc while integrated with the mocked service.
 - userController -> Mocking userService
@@ -47,15 +48,20 @@ Implement the assignment submission and grading system, integrate AWS S3 for fil
     tests the user service functions for implemented business logic for the functions like getUserDetails, login, updateUserDetails etc while integrated with the mocked reporsitories.
 - courseService -> Mocking userRepository, courseRepository
     tests the course service functions for implemented business logic for the functions like getCourse, getEnrolledCourse etc while integrated with the mocked reporsitories.
-###### Sprint 3 Unit Tests
 - AssignmentController -> Mocking assignmentService
-  tests the controller functions like getAssignments, getAssignment etc while integrated with the mocked service.
+    tests the controller functions like getAssignments, getAssignment etc while integrated with the mocked service.
 - SubmissionController -> Mocking submissionService
-  tests the controller functions like getsubmission, getSubmittedfiles etc while integrated with the mocked service.
+    tests the controller functions like getsubmission, getSubmittedfiles etc while integrated with the mocked service.
 - AssignmentService -> Mocking assignmentRepository, userRepository
-  tests the user service functions for implemented business logic for the functions like getAssignments, getAssignment etc while integrated with the mocked reporsitories.
+    tests the user service functions for implemented business logic for the functions like getAssignments, getAssignment etc while integrated with the mocked reporsitories.
 - SubmissionService -> Mocking submissionRepository, userRepository
-  tests the user service functions for implemented business logic for the functions like getsubmission, getSubmittedfiles etc while integrated with the mocked reporsitories.
+    tests the user service functions for implemented business logic for the functions like getsubmission, getSubmittedfiles etc while integrated with the mocked reporsitories.
+
+###### Sprint 4 Unit Tests
+- NotificationService -> Mocking SNS Client
+- RecommendationService -> Mocking Course Repository, tests the recommendation functionality to get the recommended course  based on different user course history.
+- RecommendationService Controller -> Mocking RecommendationService, tests the recommendation functionality to get the recommended course based on different user course history.
+- SummarizationService -> Mocking NLP summarization logic, to generate the summary of the text content passed in the body parameter with one third length of the original content.
 
 ##### **Functional Tests:**
 - Fetch assignments
@@ -63,6 +69,10 @@ Implement the assignment submission and grading system, integrate AWS S3 for fil
 - Grade assignments
 - Role-based access testing
 - Authentication & authorization testing
+- New assignment notification trigger
+- Assignment graded notification trigger
+- Course recommendation API response
+- Lecture summarization API response
 
 **Tested using positive, negative, and edge test cases.**
 [Full Backend Test Log](https://github.com/itswael/GatorCan/blob/main/UnitTestLog.md)
@@ -71,25 +81,25 @@ Implement the assignment submission and grading system, integrate AWS S3 for fil
 
 ### **🔹 Frontend (Navnit & Harsh)**
 
-#### **5️⃣ Submit Assignment PDF File (Navnit)**
-- **Who:** Students  
-- **Why:** To allow students to submit their assignment work digitally and securely.  
-- **What:** Implement a UI that enables students to upload PDF files for assignments, which are stored in an AWS S3 bucket via the backend API.
+#### **5️⃣ Notification Center UI (Navnit)**
+- **Who:** Students
+- **Why:** To display real-time notifications for better user awareness.
+- **What:** Build a Notification Center dashboard showing categorized SNS notifications.
 
-#### **6️⃣ Integrate AI-Based Course Recommendations (Navnit)**
-- **Who:** Students  
-- **Why:** To help students discover relevant courses that match their interests or performance trends.  
-- **What:** Fetch personalized course recommendations from the backend via `GET /recommendations` and display them as interactive course cards along with the reasoning or tags behind the suggestion.
+#### **6️⃣ AI-Based Course Recommendations Integration (Navnit)**
+- **Who:** Students
+- **Why:** To suggest personalized courses.
+- **What:** Fetch and display course recommendations from `GET /recommendations` API.
 
-#### **7️⃣ Build Real-Time Chat (Harsh)**
-- **Who:** Students, Instructors  
-- **Why:** To allow students and instructors to communicate instantly within a course context.  
-- **What:** Design and implement a real-time messaging feature using WebSocket or subscription-based APIs to enable instant course-related discussions.
+#### **7️⃣ Frontend Optimization for Production Deployment (Harsh)**
+- **Who:** Frontend Developers
+- **Why:** To ensure optimal app performance.
+- **What:** Implement lazy loading, tree-shaking, and reduce bundle size for production readiness.
 
-#### **8️⃣ Build Instructor Dashboard (Harsh)**
-- **Who:** Instructors  
-- **Why:** To provide instructors with tools to manage course assignments and student submissions.  
-- **What:** Create a dashboard that lets instructors create and edit assignments, view student submissions, and grade them with feedback.
+#### **8️⃣ CI/CD Pipeline & AWS Monitoring Integration (Harsh)**
+- **Who:** Frontend & DevOps Developer
+- **Why:** To automate deployment and monitor application performance.
+- **What:** Set up CI/CD using GitHub Actions/AWS CodePipeline and integrate AWS CloudWatch for monitoring.
 
 ### **✅ Unit Tests and Cypress Test for Frontend (Navnit & Harsh)**
 
@@ -153,13 +163,17 @@ Implement the assignment submission and grading system, integrate AWS S3 for fil
 
 ## ⚙️ **Sprint 4 - Issues & Completion Status**
 ### **Planned Issues:**
+- Implement AWS SNS notifications
+- Build AI-based course recommendations and summarization
+- Develop Notification Center and integrate AI features in frontend
+- Optimize frontend for production
+- Set up CI/CD and monitoring
 - Submit Assignment PDF File  
-- Integrate AI-Based Course Recommendations  
 - Build Real-Time Chat  
 - Build Instructor Dashboard  
 - Created Instructor Dashboard for managing course content  
 - Implemented real-time instructor-student Chat feature  
-- Built file upload system for assignment submissions 
+- Built file upload system for assignment submissions
 
 ### **Successfully Completed:** ✅ All planned issues were completed.
 
@@ -167,13 +181,21 @@ Implement the assignment submission and grading system, integrate AWS S3 for fil
 
 ## 🚀 Outcome
 By the end of Sprint 4, we have:
-- ✅ Instructor Dashboard to create, edit, and grade assignments
-- ✅ Real-time instructor-student chat integrated with WebSocket
-- ✅ File upload system for student assignment submissions using AWS S3
-- ✅ AI-powered course recommendation engine with UI integration
-- ✅ Optimized frontend with lazy loading and environment configs
-- ✅ CI/CD pipeline with AWS CloudWatch monitoring
-- ✅ Full coverage of unit and functional tests for new features
+- ✅ AWS SNS-based notifications for assignments, grades, and announcements
+- ✅ AI-powered course recommendation engine
+- ✅ NLP-based lecture summarization API
+- ✅ Notification Center UI in frontend
+- ✅ Integration of AI features in frontend
+- ✅ Optimized frontend for production deployment
+- ✅ CI/CD pipeline setup with AWS CloudWatch monitoring
+- ✅ Comprehensive backend and frontend testing
+
+---
+
+## 💚 Notes & Discussions
+- [ ] Improve AI recommendation algorithm (future enhancement)
+- [ ] Integrate push notifications in mobile view (future enhancement)
+- [ ] Plan final project wrap-up presentation and documentation
 
 ---
 
