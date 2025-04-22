@@ -22,13 +22,15 @@ import {
   subscribeToChats,
 } from "../../graphql/queries";
 import { generateClient } from "aws-amplify/api";
+import InstructorService from "../../services/InstructorService";
 
 const InstructorChat = () => {
   const client = generateClient();
   const username = localStorage.getItem("username");
   const instructor_id = username;
 
-  const courses = [1, 2];
+  // const courses = [1, 2];
+  const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(courses[0]);
   const [chats, setChats] = useState({});
   const [selectedChat, setSelectedChat] = useState(null);
@@ -50,6 +52,21 @@ const InstructorChat = () => {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
+
+  // Fetch courses
+  useEffect(() => {
+      const loadCourses = async () => {
+        const result = await InstructorService.fetchInstructorCourses();
+        console.log(result);
+        if (!result) {
+          setCourses([]);
+          return;
+        }
+        setCourses(result);
+      };
+  
+      loadCourses();
+    }, []);
 
   // Fetch chat list for selected course
   useEffect(() => {
@@ -243,11 +260,11 @@ const InstructorChat = () => {
             setSelectedChat(null);
           }}
         >
-          {courses.map((courseId) => (
+          {courses.map((course) => (
             <Tab
-              key={courseId}
-              label={`Course #${courseId}`}
-              value={courseId}
+              key={course.id}
+              label={`#${course.id}-${course.name}`}
+              value={course.id}
             />
           ))}
         </Tabs>
