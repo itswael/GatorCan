@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const base_url = "http://localhost:8080/";
+const base_url = "http://gatorcan-backend.us-east-2.elasticbeanstalk.com/";
 
 export const getUserDetails = async (username) => {
   const get_user_url = base_url + "user/" + username;

@@ -4,36 +4,24 @@ import { useState, useEffect } from "react";
 import { Box, Typography } from "@mui/material";
 import { useParams } from "react-router-dom";
 import CourseNavbar from "./CourseNavbar";
-import { fetchAssignments } from "../../../services/CourseService";
+import { fetchGrades } from "../../../services/CourseService";
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from "@mui/material";
 
 function CourseGrades() {
   const [loading, setLoading] = useState(false);
   const [errMessage, setErrMessage] = useState("");
+  const [grades, setGrades] = useState([]);
 
   let { id } = useParams();
 
-  const [assignments, setAssignments] = useState([]);
-  const [upcomingAssignments, setUpcomingAssignments] = useState([]);
-  const [pastAssignments, setPastAssignments] = useState([]);
-
   useEffect(() => {
     const fetchData = async () => {
-      const assignmentsData = await fetchAssignments({ id });
+      const assignmentsData = await fetchGrades({ id });
       if (assignmentsData != null) {
         console.log(assignmentsData);
-        setAssignments(assignmentsData.assignments);
-        const currentDate = new Date();
-        const upcomingAssignments = assignmentsData.assignments.filter(
-          (assignment) => new Date(assignment.deadline) > currentDate
-        );
-        const pastAssignments = assignmentsData.assignments.filter(
-          (assignment) => new Date(assignment.deadline) <= currentDate
-        );
-        setUpcomingAssignments(upcomingAssignments);
-        setPastAssignments(pastAssignments);
+        setGrades(assignmentsData);
       } else {
-        setErrMessage("Unable to fetch assignments, retry");
+        setErrMessage("Unable to fetch grades, retry");
       }
       setLoading(false);
     };
@@ -55,10 +43,7 @@ function CourseGrades() {
               ) : (
                 <div>
                   <Typography variant="h3">Grades</Typography>
-                  <Grades
-                    upcomingAssignments={upcomingAssignments}
-                    pastAssignments={pastAssignments}
-                  ></Grades>
+                  <Grades grades={grades}></Grades>
                 </div>
               )}
             </div>
@@ -71,23 +56,52 @@ function CourseGrades() {
 
 export default CourseGrades;
 
-function Grades({ upcomingAssignments, pastAssignments }) {
-  const renderAssignments = (assignments) => {
-    return assignments
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+} from "@mui/material";
+
+function Grades({ grades }) {
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [selectedFeedback, setSelectedFeedback] = useState("");
+
+  const handleOpenFeedback = (assignment) => {
+    const feedback = `Feedback for "${assignment.title}": ${(!assignment.feedback || assignment.feedback == "") ? "N/A" : assignment.feedback}`;
+    setSelectedFeedback(feedback);
+    setFeedbackDialogOpen(true);
+  };
+
+  const handleClose = () => {
+    setFeedbackDialogOpen(false);
+    setSelectedFeedback("");
+  };
+
+  const renderGrades = (grades) => {
+    return grades
       .slice()
       .reverse()
-      .map((assignment, index) => (
+      .map((grade, index) => (
         <TableRow key={index}>
-          <TableCell>{assignment.title}</TableCell>
-          <TableCell>{new Date(assignment.deadline).toLocaleString()}</TableCell>
-          <TableCell></TableCell>
-          <TableCell>0</TableCell>
-          <TableCell>{assignment.max_points}</TableCell>
+          <TableCell>{grade.title}</TableCell>
+          <TableCell>{new Date(grade.updated_at).toLocaleString()}</TableCell>
+          <TableCell>{new Date(grade.deadline).toLocaleString()}</TableCell>
+          <TableCell>{grade.marks}</TableCell>
+          <TableCell>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => handleOpenFeedback(grade)}
+            >
+              View Feedback
+            </Button>
+          </TableCell>
+          <TableCell>{grade.max_points}</TableCell>
         </TableRow>
       ));
   };
-
-  const [feedback, setFeedback] = useState("");
 
   return (
     <div>
@@ -99,23 +113,23 @@ function Grades({ upcomingAssignments, pastAssignments }) {
                 <b>Name</b>
               </TableCell>
               <TableCell>
-                <b>Due</b>
-              </TableCell>
-              <TableCell>
                 <b>Submitted</b>
               </TableCell>
               <TableCell>
+                <b>Due</b>
+              </TableCell>
+              <TableCell>
                 <b>Score</b>
+              </TableCell>
+              <TableCell>
+                <b>Feedback</b>
               </TableCell>
               <TableCell>
                 <b>MaxPoints</b>
               </TableCell>
             </TableRow>
           </TableHead>
-          <TableBody>
-            {renderAssignments(pastAssignments)}
-            {renderAssignments(upcomingAssignments)}
-          </TableBody>
+          <TableBody>{renderGrades(grades)}</TableBody>
           <TableRow>
             <TableCell colSpan={3}>Total</TableCell>
             <TableCell>0</TableCell>
@@ -123,16 +137,17 @@ function Grades({ upcomingAssignments, pastAssignments }) {
           </TableRow>
         </Table>
       </TableContainer>
-      <Box
-        sx={{
-          marginTop: "20px",
-          textAlign: "left",
-        }}
-      >
-        <Typography variant="h6">
-          <strong>Feedback</strong>: {feedback == "" ? "N/A" : feedback}
-        </Typography>
-      </Box>
+
+      {/* Feedback Dialog */}
+      <Dialog open={feedbackDialogOpen} onClose={handleClose}>
+        <DialogTitle>Feedback</DialogTitle>
+        <DialogContent>
+          <Typography>{selectedFeedback}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 }

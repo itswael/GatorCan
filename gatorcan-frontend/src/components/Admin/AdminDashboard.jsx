@@ -17,6 +17,8 @@ import QueryStatsOutlinedIcon from "@mui/icons-material/QueryStatsOutlined";
 import UserRegistration from "./Tools/UserRegistration";
 import UserDeletion from "./Tools/UserDeletion";
 import UserRolesUpdation from "./Tools/UserRolesUpdation";
+import AddCourse from "./Tools/AddCourse";
+import ActivateCourse from "./Tools/ActivateCourse";
 
 import { useState } from "react";
 
@@ -37,8 +39,8 @@ function AdminDashboard() {
     [<PersonRemoveOutlinedIcon />, "LightPink", "Delete User"],
     [<BorderColorOutlinedIcon />, "Salmon", "Edit User"],
     [<CollectionsBookmarkOutlinedIcon />, "Coral", "Add Course"],
-    [<BackspaceOutlinedIcon />, "Gold", "Delete Course"],
-    [<EditNoteOutlinedIcon />, "Tomato", "Edit Course"],
+    [<BackspaceOutlinedIcon />, "Gold", "Activate Course"],
+    [<EditNoteOutlinedIcon />, "Tomato", "Delete Course"],
     [<PersonSearchOutlinedIcon />, "PapayaWhip", "View Users"],
     [<ContentPasteSearchOutlinedIcon />, "Khaki", "View Courses"],
     [<QueryStatsOutlinedIcon />, "Crimson", "Statistics"],
@@ -46,7 +48,7 @@ function AdminDashboard() {
 
   return (
     <div>
-      <AdminNavbar/>
+      <AdminNavbar />
       <Box
         display="flex"
         justifyContent="center"
@@ -59,6 +61,10 @@ function AdminDashboard() {
           <UserDeletion setCurrPage={setCurrPage} />
         ) : currPage == 3 ? (
           <UserRolesUpdation setCurrPage={setCurrPage} />
+        ) : currPage == 4 ? (
+          <AddCourse setCurrPage={setCurrPage} />
+        ) : currPage == 5 ? (
+          <ActivateCourse setCurrPage={setCurrPage} />
         ) : (
           <Grid container spacing={5} maxWidth={600}>
             {tools.map((_, index) => (
