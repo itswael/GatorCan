@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import CourseGrades from "./CourseGrades";
-import { fetchAssignments } from "../../../services/CourseService";
+import { fetchAssignments, fetchGrades } from "../../../services/CourseService";
 import "@testing-library/jest-dom";
 
 jest.mock("../../../services/CourseService");
@@ -34,9 +34,9 @@ describe("CourseGrades Component", () => {
     );
 
     // Wait for the assignments to be fetched
-    await waitFor(() => expect(fetchAssignments).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(fetchGrades).toHaveBeenCalledTimes(1));
 
-    // Wait for the total row to be present in the document
-    await waitFor(() => expect(screen.getByText("Total")).toBeInTheDocument());
+    // Wait for the grades text to be present in the document
+    await waitFor(() => expect(screen.getByText("Grades")).toBeInTheDocument());
   });
 });

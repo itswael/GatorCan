@@ -16,7 +16,7 @@ describe("UserService", () => {
       data: { username: "testuser", email: "test@example.com" },
     });
     expect(axios.get).toHaveBeenCalledWith(
-      "http://localhost:8080/user/testuser",
+      "http://gatorcan-backend.us-east-2.elasticbeanstalk.com/user/testuser",
       expect.objectContaining({
         headers: expect.objectContaining({
           Authorization: expect.stringContaining("Bearer "),
@@ -34,7 +34,7 @@ describe("UserService", () => {
 
     expect(result).toEqual({ success: true });
     expect(axios.put).toHaveBeenCalledWith(
-      "http://localhost:8080/user/update/",
+      "http://gatorcan-backend.us-east-2.elasticbeanstalk.com/user/update/",
       {
         old_password: "oldPass",
         new_password: "newPass",
