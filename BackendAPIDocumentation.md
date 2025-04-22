@@ -679,3 +679,221 @@ json
 - 500 Internal Server Error: Error uploading file.
 
 ---
+## *15. POST /courses/:cid/assignments/:aid/grade*
+
+### *Brief Description*
+Allows an instructor to grade a specific assignment submission.
+
+### *URL*
+POST /courses/:cid/assignments/:aid/grade
+
+### *Headers*
+| Key           | Value            | Description              |
+|---------------|------------------|--------------------------|
+| Content-Type  | application/json | Specifies the request body format. |
+| Authorization | Bearer <token>   | Instructor authentication token. |
+
+### *Request Body*
+json
+{
+  "submission_id": "string",
+  "grade": "number",
+  "feedback": "string"
+}
+
+### *Response Body*
+#### *Success (200 OK)*
+json
+{
+  "message": "Submission graded successfully"
+}
+
+#### *Failure (404 Not Found)*
+json
+{
+  "error": "Submission or assignment not found"
+}
+
+#### *Failure (403 Forbidden)*
+json
+{
+  "error": "Unauthorized access"
+}
+
+### *Status Codes*
+- 200 OK: Submission graded successfully.
+- 404 Not Found: Submission or assignment not found.
+- 403 Forbidden: Unauthorized access.
+
+---
+
+## *16. POST /courses/:cid/upsertassignment*
+
+### *Brief Description*
+Allows an instructor to create or update an assignment for a specific course.
+
+### *URL*
+POST /courses/:cid/upsertassignment
+
+### *Headers*
+| Key           | Value            | Description              |
+|---------------|------------------|--------------------------|
+| Content-Type  | application/json | Specifies the request body format. |
+| Authorization | Bearer <token>   | Instructor authentication token. |
+
+### *Request Body*
+json
+{
+  "assignment_id": "string (optional)",
+  "title": "string",
+  "description": "string",
+  "deadline": "string",
+  "max_points": "number"
+}
+
+### *Response Body*
+#### *Success (200 OK)*
+json
+{
+  "message": "Assignment created/updated successfully"
+}
+
+#### *Failure (400 Bad Request)*
+json
+{
+  "error": "Invalid input data"
+}
+
+#### *Failure (403 Forbidden)*
+json
+{
+  "error": "Unauthorized access"
+}
+
+### *Status Codes*
+- 200 OK: Assignment created/updated successfully.
+- 400 Bad Request: Invalid input data.
+- 403 Forbidden: Unauthorized access.
+
+---
+
+## *17. GET /assignments/:aid/submissions*
+
+### *Brief Description*
+Allows an instructor to retrieve all submissions for a specific assignment.
+
+### *URL*
+GET /assignments/:aid/submissions
+
+### *Headers*
+| Key           | Value            | Description              |
+|---------------|------------------|--------------------------|
+| Authorization | Bearer <token>   | Instructor authentication token. |
+
+### *Request Body*
+None.
+
+### *Response Body*
+#### *Success (200 OK)*
+json
+[
+  {
+    "submission_id": "string",
+    "student_id": "string",
+    "file_url": "string",
+    "submitted_at": "string",
+    "grade": "number (optional)"
+  }
+]
+
+#### *Failure (404 Not Found)*
+json
+{
+  "error": "Assignment not found"
+}
+
+### *Status Codes*
+- 200 OK: Submissions retrieved successfully.
+- 404 Not Found: Assignment not found.
+
+---
+
+## *18. GET /courses/:cid/grades*
+
+### *Brief Description*
+Allows an instructor to retrieve all grades for a specific course.
+
+### *URL*
+GET /courses/:cid/grades
+
+### *Headers*
+| Key           | Value            | Description              |
+|---------------|------------------|--------------------------|
+| Authorization | Bearer <token>   | Instructor authentication token. |
+
+### *Request Body*
+None.
+
+### *Response Body*
+#### *Success (200 OK)*
+json
+[
+  {
+    "student_id": "string",
+    "assignment_id": "string",
+    "grade": "number",
+    "feedback": "string"
+  }
+]
+
+#### *Failure (404 Not Found)*
+json
+{
+  "error": "Course not found"
+}
+
+### *Status Codes*
+- 200 OK: Grades retrieved successfully.
+- 404 Not Found: Course not found.
+
+---
+
+## *19. GET /courses/*
+
+### *Brief Description*
+Allows an instructor to retrieve a list of all courses they manage.
+
+### *URL*
+GET /courses/
+
+### *Headers*
+| Key           | Value            | Description              |
+|---------------|------------------|--------------------------|
+| Authorization | Bearer <token>   | Instructor authentication token. |
+
+### *Request Body*
+None.
+
+### *Response Body*
+#### *Success (200 OK)*
+json
+[
+  {
+    "course_id": "string",
+    "course_name": "string",
+    "description": "string",
+    "instructor": "string"
+  }
+]
+
+#### *Failure (401 Unauthorized)*
+json
+{
+  "error": "Unauthorized access"
+}
+
+### *Status Codes*
+- 200 OK: List of courses retrieved successfully.
+- 401 Unauthorized: Unauthorized access.
+
+---
