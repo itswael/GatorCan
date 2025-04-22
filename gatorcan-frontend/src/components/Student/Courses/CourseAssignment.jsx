@@ -7,6 +7,8 @@ import { useParams } from "react-router-dom";
 import CourseNavbar from "./CourseNavbar";
 import {
   fetchAssignmentDetails,
+  submitAssignmentFile,
+  fetchAssignmentSubmissionDetails,
 } from "../../../services/CourseService";
 import s3Client from "../../../awsConfig";
 import { PutObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
@@ -148,6 +150,14 @@ function Submission({ id, assignment }) {
         setAssignmentDetails(assignmentData);
       } else {
         setErrMessage("Unable to fetch assignments, retry");
+      }
+
+      const submissionResult = await fetchAssignmentSubmissionDetails({
+        cid: id,
+        aid: assignment.id,
+      });
+      if (submissionResult?.success) {
+        setSubmittedData(submissionResult.data);
       }
 
       setLoading(false);
